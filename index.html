@@ -1,0 +1,281 @@
+<style>
+:root{
+  --navy:#152a4a; --navy-deep:#0c1b32; --steel:#4a5b7a; --line:#dfe4ee;
+  --bg:#f4f6fb; --card:#ffffff; --accent:#c8892e; --good:#2f7d5c; --bad:#b3432b;
+  --text:#1b2333; --sub:#6b7690;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;font-family:"Pretendard","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100%;
+}
+header{background:var(--navy-deep);color:#fff;padding:18px 24px 0}
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:4px}
+header h1{font-size:18px;margin:0;font-weight:700;letter-spacing:-0.01em}
+header .sub{font-size:12px;color:#b9c3d6;margin-bottom:14px}
+.top-spacer{flex:1}
+.admin-btn{
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.25);color:#fff;
+  font-size:12px;padding:6px 12px;border-radius:7px;cursor:pointer;font-weight:600;
+}
+.admin-btn:hover{background:rgba(255,255,255,0.16)}
+.admin-btn.on{background:var(--accent);border-color:var(--accent);color:#1b2333}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{
+  padding:9px 16px;border-radius:8px 8px 0 0;font-size:13.5px;font-weight:600;
+  color:#c7d0e0;background:rgba(255,255,255,0.06);cursor:pointer;
+  border:1px solid rgba(255,255,255,0.14);border-bottom:none;
+}
+.tab:hover{background:rgba(255,255,255,0.12)}
+.tab.on{background:var(--bg);color:var(--navy-deep)}
+
+.admin-panel{
+  display:none;background:#fff;border-bottom:1px solid var(--line);padding:14px 24px;
+}
+.admin-panel.show{display:block}
+.admin-panel h3{font-size:13px;margin:0 0 10px;color:var(--navy-deep)}
+.file-links{display:flex;flex-wrap:wrap;gap:8px}
+.file-links a{
+  font-size:12.5px;color:var(--navy);background:var(--bg);border:1px solid var(--line);
+  border-radius:7px;padding:6px 12px;text-decoration:none;font-weight:600;
+}
+.file-links a:hover{border-color:var(--navy);background:#eef1fa}
+.admin-note{font-size:11.5px;color:var(--sub);margin-top:10px;line-height:1.6}
+
+.stage{flex:1;min-height:0;position:relative}
+.frame-wrap{display:none;position:absolute;inset:0}
+.frame-wrap.on{display:block}
+.frame-wrap iframe{width:100%;height:100%;border:0;background:#fff}
+
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(12,27,50,0.55);z-index:900;
+  align-items:center;justify-content:center;
+}
+.modal-overlay.show{display:flex}
+.modal-box{
+  background:#fff;border-radius:14px;width:360px;max-width:92vw;padding:26px 24px;
+  box-shadow:0 12px 40px rgba(0,0,0,0.25);
+}
+.modal-box h3{margin:0 0 4px;font-size:16px;color:var(--navy-deep)}
+.modal-box p{margin:0 0 18px;font-size:12.5px;color:var(--sub)}
+.modal-box label{display:block;font-size:12px;font-weight:600;color:var(--sub);margin:0 0 5px}
+.modal-box input{
+  width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;
+  font-size:13.5px;margin-bottom:12px;font-family:inherit;
+}
+.modal-box input:focus{outline:none;border-color:var(--navy)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+.modal-actions button{
+  border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;
+}
+.btn-cancel{background:#fff;color:var(--sub);border:1px solid var(--line) !important}
+.btn-ok{background:var(--navy);color:#fff}
+.btn-ok:hover{background:var(--navy-deep)}
+.modal-err{font-size:12px;color:var(--bad);min-height:16px;margin-top:-6px;margin-bottom:10px}
+</style>
+
+<header>
+  <div class="top">
+    <h1>전략지원처 업무 도구 모음</h1>
+    <div class="top-spacer"></div>
+    <button class="admin-btn" id="adminBtn">🔒 관리자</button>
+  </div>
+  <div class="sub">청강문화산업대학교 전략지원처 · 5개 도구를 한 화면에서</div>
+  <div class="tabs" id="tabs">
+    <button class="tab on" data-app="rename">결재문 파일명 변경기</button>
+    <button class="tab" data-app="reg">규정개정 도구</button>
+    <button class="tab" data-app="salary">급여 예산대조</button>
+    <button class="tab" data-app="fanout">대상별 문안생성기</button>
+    <button class="tab" data-app="budget">예산조정 기록앱</button>
+  </div>
+</header>
+
+<div class="admin-panel" id="adminPanel">
+  <h3>원본 파일 다운로드 (관리자 전용)</h3>
+  <div class="file-links" id="fileLinksApps">
+    <a href="결재문파일명변경기.html" data-fname="결재문파일명변경기.html">결재문파일명변경기.html</a>
+    <a href="규정개정도구.html" data-fname="규정개정도구.html">규정개정도구.html</a>
+    <a href="급여_예산대조.html" data-fname="급여_예산대조.html">급여_예산대조.html</a>
+    <a href="대상별문안생성기.html" data-fname="대상별문안생성기.html">대상별문안생성기.html</a>
+    <a href="예산조정기록앱.html" data-fname="예산조정기록앱.html">예산조정기록앱.html</a>
+  </div>
+  <div class="admin-note" style="margin-top:14px;margin-bottom:4px">공용 라이브러리 (아래 도구를 PC에서 단독으로 열 때 html 파일과 같은 폴더의 <b>libs</b> 폴더 안에 함께 필요: 규정개정 도구 · 급여 예산대조 · 예산조정 기록앱)</div>
+  <div class="file-links" id="fileLinksLibs">
+    <a href="libs/pdf.min.js" data-fname="libs/pdf.min.js">libs/pdf.min.js</a>
+    <a href="libs/pdf.worker.min.js" data-fname="libs/pdf.worker.min.js">libs/pdf.worker.min.js</a>
+    <a href="libs/xlsx.full.min.js" data-fname="libs/xlsx.full.min.js">libs/xlsx.full.min.js</a>
+  </div>
+  <div class="admin-note">파일을 누르면 내려받기 확인창이 뜹니다. 받은 파일은 PC에서 단독으로도 열립니다. 일반 사용자에게는 이 패널이 보이지 않습니다.</div>
+</div>
+
+<div class="stage" id="stage">
+  <div class="frame-wrap on" data-app="rename"><iframe data-src="결재문파일명변경기.html"></iframe></div>
+  <div class="frame-wrap" data-app="reg"><iframe data-src="규정개정도구.html"></iframe></div>
+  <div class="frame-wrap" data-app="salary"><iframe data-src="급여_예산대조.html"></iframe></div>
+  <div class="frame-wrap" data-app="fanout"><iframe data-src="대상별문안생성기.html"></iframe></div>
+  <div class="frame-wrap" data-app="budget"><iframe data-src="예산조정기록앱.html"></iframe></div>
+</div>
+
+<div class="modal-overlay" id="adminModal">
+  <div class="modal-box">
+    <h3>관리자 로그인</h3>
+    <p>원본 파일 다운로드는 관리자만 가능합니다.</p>
+    <label>관리자 ID</label>
+    <input type="text" id="adminId" autocomplete="off">
+    <label>비밀번호</label>
+    <input type="password" id="adminPw" autocomplete="off">
+    <div class="modal-err" id="adminErr"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="adminCancel">취소</button>
+      <button class="btn-ok" id="adminOk">로그인</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---- 호스팅 환경 감지 (claude.ai 아티팩트 vs GitHub Pages 등 일반 호스팅) ----
+  var IN_ARTIFACT = !!(window.claude && typeof window.claude.use === 'function');
+  var HOST_MODE = IN_ARTIFACT ? 'artifact' : 'pages';
+
+  // 각 하위 도구 iframe에 호스팅 모드를 쿼리스트링으로 전달 (인쇄 버튼 등 도구별 분기에 사용)
+  document.querySelectorAll('.frame-wrap iframe[data-src]').forEach(function(f){
+    f.src = f.dataset.src + '?host=' + HOST_MODE;
+  });
+
+  // 탭 전환 — iframe은 항상 마운트 상태 유지(입력값 보존), 보이기만 토글
+  var tabs = document.querySelectorAll('.tab');
+  var frames = document.querySelectorAll('.frame-wrap');
+  tabs.forEach(function(t){
+    t.addEventListener('click', function(){
+      var app = t.dataset.app;
+      tabs.forEach(function(x){ x.classList.toggle('on', x===t); });
+      frames.forEach(function(f){ f.classList.toggle('on', f.dataset.app===app); });
+    });
+  });
+
+  // 관리자 로그인 (클라이언트 측 간단 게이트 — 실제 서버 인증 아님)
+  var ADMIN_ID_HASH = 'ebd65fb021d56a4929cb4eb538ae2296ba88d19e5f7db39fefa97bb6c704c24c';
+  var ADMIN_PW_HASH = 'ebd65fb021d56a4929cb4eb538ae2296ba88d19e5f7db39fefa97bb6c704c24c';
+  var SESSION_KEY = 'adminUnlocked_v1';
+
+  var adminBtn = document.getElementById('adminBtn');
+  var adminPanel = document.getElementById('adminPanel');
+  var modal = document.getElementById('adminModal');
+  var idInput = document.getElementById('adminId');
+  var pwInput = document.getElementById('adminPw');
+  var errBox = document.getElementById('adminErr');
+
+  async function sha256(text){
+    var enc = new TextEncoder().encode(text);
+    var buf = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+  }
+
+  function isUnlocked(){
+    try{ return sessionStorage.getItem(SESSION_KEY) === '1'; }catch(e){ return false; }
+  }
+  function setUnlocked(){
+    try{ sessionStorage.setItem(SESSION_KEY, '1'); }catch(e){}
+  }
+
+  function applyUnlockedUI(){
+    adminBtn.classList.add('on');
+    adminBtn.textContent = '🔓 관리자 모드';
+    adminPanel.classList.add('show');
+  }
+
+  if (isUnlocked()) applyUnlockedUI();
+
+  adminBtn.addEventListener('click', function(){
+    if (isUnlocked()){
+      // 이미 로그인된 상태 — 패널 토글
+      adminPanel.classList.toggle('show');
+      return;
+    }
+    idInput.value=''; pwInput.value=''; errBox.textContent='';
+    modal.classList.add('show');
+    idInput.focus();
+  });
+  document.getElementById('adminCancel').addEventListener('click', function(){
+    modal.classList.remove('show');
+  });
+  modal.addEventListener('click', function(e){ if(e.target===modal) modal.classList.remove('show'); });
+
+  async function tryLogin(){
+    var idH = await sha256(idInput.value.trim());
+    var pwH = await sha256(pwInput.value.trim());
+    if (idH === ADMIN_ID_HASH && pwH === ADMIN_PW_HASH){
+      setUnlocked();
+      applyUnlockedUI();
+      modal.classList.remove('show');
+    } else {
+      errBox.textContent = 'ID 또는 비밀번호가 올바르지 않습니다.';
+    }
+  }
+  document.getElementById('adminOk').addEventListener('click', tryLogin);
+  pwInput.addEventListener('keydown', function(e){ if(e.key==='Enter') tryLogin(); });
+  idInput.addEventListener('keydown', function(e){ if(e.key==='Enter') pwInput.focus(); });
+
+  // ---- 다운로드 처리: 아티팩트(claude.ai)에서는 downloads 기능, 그 외(GitHub Pages 등)에서는 일반 blob 다운로드 ----
+  var __dlCap = null;
+  var __dlCapReady = (async function(){
+    if(!IN_ARTIFACT) return;
+    try{ __dlCap = await window.claude.use('downloads'); }catch(e){ __dlCap = null; }
+  })();
+
+  function classicBlobDownload(filename, blob){
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+    return {status:'saved'};
+  }
+
+  async function doSave(filename, data){
+    var blob = (data instanceof Blob) ? data : new Blob([data]);
+    if (IN_ARTIFACT){
+      await __dlCapReady;
+      if(!__dlCap) throw {code:'unavailable', message:'다운로드 기능을 사용할 수 없습니다.'};
+      return await __dlCap.save({filename:filename, data:blob});
+    }
+    return classicBlobDownload(filename, blob);
+  }
+
+  // ---- 하위 도구(iframe)의 다운로드 요청을 대신 처리하는 브리지 ----
+  window.addEventListener('message', async function(e){
+    var d = e.data;
+    if (!d || d.type !== 'app-download-request') return;
+    var src = e.source;
+    try{
+      var result = await doSave(d.filename, d.data);
+      if(src) src.postMessage({type:'app-download-result', id:d.id, ok:true, result:result}, '*');
+    }catch(err){
+      if(src) src.postMessage({type:'app-download-result', id:d.id, ok:false, error:{code:(err&&err.code)||'unavailable', message:(err&&err.message)||String(err)}}, '*');
+    }
+  });
+
+  // ---- 관리자 패널: 원본 파일 다운로드 (일반 <a download>는 아티팩트 공유 링크에서 동작하지 않아 위 doSave로 처리) ----
+  function wireFileLink(a){
+    a.addEventListener('click', async function(ev){
+      ev.preventDefault();
+      var href = a.getAttribute('href');
+      var fname = a.dataset.fname || href;
+      var orig = a.textContent;
+      a.textContent = '받는 중...';
+      try{
+        var resp = await fetch(href);
+        if(!resp.ok) throw new Error('파일을 불러오지 못했습니다 (' + resp.status + ')');
+        var blob = await resp.blob();
+        await doSave(fname, blob);
+      }catch(err){
+        alert('다운로드에 실패했습니다: ' + ((err && err.message) || err));
+      }
+      a.textContent = orig;
+    });
+  }
+  document.querySelectorAll('#fileLinksApps a, #fileLinksLibs a').forEach(wireFileLink);
+})();
+</script>

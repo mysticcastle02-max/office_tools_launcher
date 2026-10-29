@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026년 2차 스쿨실링예산 조정 — 청강문화산업대학교 전략지원처</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="libs/xlsx.full.min.js"></script>
+<style>
+:root{
+  --ink:#1C2B3A;
+  --ink-soft:#33465A;
+  --paper:#F5F6F3;
+  --panel:#FFFFFF;
+  --line:#DEDBD2;
+  --line-soft:#EAE7DE;
+  --muted:#73808C;
+  --gold:#B8863B;
+  --gold-soft:#F3E9D6;
+  --increase:#B5482F;
+  --increase-soft:#F7E4DF;
+  --decrease:#2F6F5E;
+  --decrease-soft:#DEEEE8;
+  --radius:3px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0; height:100%;}
+body{
+  font-family:'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  font-size:14px;
+  line-height:1.5;
+  font-variant-numeric: tabular-nums;
+}
+h1,h2,h3,h4{font-family:'Noto Serif KR', serif; margin:0; font-weight:600;}
+button{font-family:inherit; cursor:pointer;}
+input,textarea{font-family:inherit; font-size:inherit;}
+
+/* ---------- App shell ---------- */
+#app{display:flex; flex-direction:column; height:100vh; height:100dvh;}
+
+header.topbar{
+  background:var(--ink);
+  color:#fff;
+  padding:16px 28px;
+  display:flex;
+  align-items:center;
+  gap:24px;
+  flex-wrap:wrap;
+}
+header.topbar .brand{display:flex; flex-direction:column; gap:2px;}
+header.topbar .brand h1{font-size:19px; color:#fff; letter-spacing:0.2px;}
+header.topbar .brand .sub{font-size:11.5px; color:#B9C3CC; font-weight:500;}
+.tabbar{display:flex; gap:2px; margin-left:8px;}
+.tabbtn{
+  background:transparent; border:1px solid rgba(255,255,255,0.25); color:#D8DEE4;
+  padding:8px 16px; font-size:13px; font-weight:500; border-radius:var(--radius);
+}
+.tabbtn.active{background:#fff; color:var(--ink); border-color:#fff; font-weight:600;}
+.topbar-spacer{flex:1;}
+.owner-input{
+  background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.25); color:#fff;
+  border-radius:var(--radius); padding:7px 10px; font-size:12.5px; width:120px;
+}
+.owner-input::placeholder{color:#9FAAB4;}
+.btn{
+  border:none; border-radius:var(--radius); padding:8px 16px; font-size:13px; font-weight:600;
+  transition:filter .12s;
+}
+.btn:hover{filter:brightness(1.08);}
+.btn-primary{background:var(--gold); color:#fff;}
+.btn-outline{background:transparent; border:1px solid rgba(255,255,255,0.35); color:#fff;}
+.btn-outline:hover{background:rgba(255,255,255,0.08);}
+.btn-ghost{background:transparent; color:var(--ink-soft); border:1px solid var(--line);}
+.btn-ghost:hover{background:var(--line-soft);}
+.btn-danger-ghost{background:transparent; color:var(--increase); border:1px solid var(--increase);}
+.btn:disabled{opacity:0.4; cursor:not-allowed; filter:none;}
+
+/* ---------- Summary strip ---------- */
+.summary-strip{
+  display:flex; gap:0; background:var(--panel); border-bottom:1px solid var(--line);
+  padding:0 28px; overflow-x:auto;
+}
+.summary-item{
+  padding:14px 26px 14px 0; margin-right:26px; border-right:1px solid var(--line-soft);
+  min-width:120px;
+}
+.summary-item:last-child{border-right:none;}
+.summary-item .label{font-size:11px; color:var(--muted); font-weight:600; letter-spacing:0.3px; margin-bottom:4px;}
+.summary-item .value{font-size:20px; font-weight:700; font-family:'Noto Serif KR', serif;}
+.summary-item .value.gold{color:var(--gold);}
+.summary-item .value.increase{color:var(--increase);}
+.summary-item .value.decrease{color:var(--decrease);}
+
+/* ---------- Main layout ---------- */
+.main-area{flex:1; display:flex; min-height:0;}
+.view{display:none; flex:1; min-height:0;}
+.view.active{display:flex;}
+
+/* Adjust view */
+#view-adjust{}
+.sidebar{
+  width:640px; flex-shrink:0; background:var(--panel); border-right:1px solid var(--line);
+  display:flex; flex-direction:column; min-height:0;
+}
+.sidebar-controls{padding:14px; border-bottom:1px solid var(--line-soft); display:flex; flex-direction:column; gap:8px;}
+.search-input{
+  width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:var(--radius); font-size:13px;
+}
+.school-select{
+  width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:var(--radius); font-size:13px;
+  background:#fff;
+}
+.biz-list{flex:1; overflow-y:auto;}
+.biz-group-label{
+  padding:8px 14px 4px; font-size:11px; font-weight:700; color:var(--muted); letter-spacing:0.4px;
+  background:var(--paper); position:sticky; top:0;
+}
+.biz-item{
+  padding:10px 14px; border-bottom:1px solid var(--line-soft); cursor:pointer;
+  display:flex; flex-direction:column; gap:3px;
+}
+.biz-item:hover{background:var(--paper);}
+.biz-item.selected{background:var(--gold-soft); border-left:3px solid var(--gold); padding-left:11px;}
+.biz-item .biz-name-row{display:flex; justify-content:space-between; align-items:baseline; gap:12px;}
+.biz-item .biz-name{font-size:13px; font-weight:600; color:var(--ink); flex:1; min-width:0;}
+.biz-item .biz-total{font-size:12px; color:var(--muted); white-space:nowrap; flex-shrink:0;}
+.dot-changed{
+  display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--gold); margin-right:5px;
+}
+
+.detail-panel{flex:1; overflow-y:auto; padding:26px 34px 60px; min-height:0;}
+.empty-state{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;
+  color:var(--muted); gap:8px; text-align:center;
+}
+.empty-state h2{color:var(--ink-soft); font-size:18px;}
+
+.detail-header{margin-bottom:22px; padding-bottom:18px; border-bottom:1px solid var(--line);}
+.detail-header .crumb{font-size:12px; color:var(--muted); margin-bottom:6px;}
+.detail-header h2{font-size:22px; color:var(--ink);}
+
+.card{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+  margin-bottom:16px; overflow:hidden;
+}
+.card-head{
+  padding:14px 18px; border-bottom:1px solid var(--line-soft); display:flex; justify-content:space-between; align-items:flex-start; gap:12px;
+  flex-wrap:wrap;
+}
+.card-head .acct-title{font-size:14.5px; font-weight:700; color:var(--ink);}
+.card-head .acct-code{font-size:11.5px; color:var(--muted); font-weight:500; margin-top:2px;}
+.fund-badges{display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;}
+.fund-badge{
+  font-size:10.5px; background:var(--paper); border:1px solid var(--line-soft); border-radius:2px;
+  padding:2px 7px; color:var(--ink-soft); font-weight:500;
+}
+.card-totals{text-align:right; flex-shrink:0;}
+.total-row{font-size:11px; color:var(--muted); margin-bottom:2px;}
+.total-figures{display:flex; align-items:baseline; gap:6px; justify-content:flex-end;}
+.total-before{font-size:14px; color:var(--muted);}
+.total-before.strike{text-decoration:line-through; text-decoration-color:var(--line);}
+.total-arrow{color:var(--muted); font-size:12px;}
+.total-after{font-size:17px; font-weight:700; font-family:'Noto Serif KR', serif;}
+.total-after.increase{color:var(--increase);}
+.total-after.decrease{color:var(--decrease);}
+
+.detail-table{width:100%; border-collapse:collapse;}
+.detail-table th{
+  text-align:left; font-size:10.5px; color:var(--muted); font-weight:700; letter-spacing:0.3px;
+  padding:8px 18px; border-bottom:1px solid var(--line-soft); background:var(--paper);
+}
+.detail-table th.num-col{text-align:right;}
+.detail-table td{padding:8px 18px; border-bottom:1px solid var(--line-soft); vertical-align:top;}
+.detail-table tr:last-child td{border-bottom:none;}
+.detail-table tr.row-changed td{background:var(--gold-soft);}
+.detail-table tr.row-removed td{background:var(--increase-soft); opacity:0.7;}
+.amount-input{
+  width:130px; text-align:right; padding:6px 8px; border:1px solid var(--line); border-radius:var(--radius);
+  font-size:13px; font-variant-numeric: tabular-nums;
+}
+.desc-input{
+  width:100%; padding:6px 8px; border:1px solid var(--line); border-radius:var(--radius); font-size:13px;
+}
+.row-original{font-size:11px; color:var(--muted); margin-top:3px;}
+.row-original .strike{text-decoration:line-through;}
+.icon-btn{
+  background:transparent; border:1px solid var(--line); border-radius:var(--radius); width:26px; height:26px;
+  color:var(--muted); font-size:14px; line-height:1;
+}
+.icon-btn:hover{background:var(--increase-soft); color:var(--increase); border-color:var(--increase);}
+.card-foot{padding:10px 18px; display:flex; justify-content:space-between; align-items:center; background:var(--paper);}
+.add-row-btn{font-size:12px; color:var(--ink-soft); background:transparent; border:1px dashed var(--line); border-radius:var(--radius); padding:6px 12px;}
+.add-row-btn:hover{border-color:var(--gold); color:var(--gold);}
+.reset-btn{font-size:11.5px; color:var(--muted); background:transparent; border:none; text-decoration:underline;}
+.reset-btn:hover{color:var(--increase);}
+
+/* Consolidate view */
+#view-consolidate{flex-direction:column; padding:26px 34px 60px; overflow-y:auto; gap:20px;}
+.upload-zone{
+  border:1.5px dashed var(--line); border-radius:var(--radius); background:var(--panel);
+  padding:34px; text-align:center; color:var(--muted); cursor:pointer;
+}
+.upload-zone:hover{border-color:var(--gold); color:var(--gold);}
+.upload-zone.dragover{border-color:var(--gold); background:var(--gold-soft);}
+.upload-zone h3{color:var(--ink-soft); font-size:15px; margin-bottom:4px;}
+.file-chip-row{display:flex; flex-wrap:wrap; gap:8px;}
+.file-chip{
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:6px 10px; font-size:12px;
+  display:flex; align-items:center; gap:8px;
+}
+.file-chip button{background:none; border:none; color:var(--muted); font-size:14px;}
+.file-chip button:hover{color:var(--increase);}
+
+.cons-table-wrap{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); overflow-x:auto;}
+.cons-table tr.row-summary td{background:var(--gold-soft); border-bottom:2px solid var(--line); font-weight:600;}
+table.cons-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+table.cons-table th{
+  background:var(--ink); color:#fff; text-align:left; padding:10px 14px; font-weight:600; font-size:11.5px;
+  letter-spacing:0.2px; position:sticky; top:0;
+}
+table.cons-table th.num-col, table.cons-table td.num-col{text-align:right;}
+table.cons-table td{padding:9px 14px; border-bottom:1px solid var(--line-soft);}
+table.cons-table tr:hover td{background:var(--paper);}
+.cons-table .increase{color:var(--increase); font-weight:600;}
+.cons-table .decrease{color:var(--decrease); font-weight:600;}
+.section-title{font-size:15px; font-weight:700; color:var(--ink-soft); margin-bottom:2px;}
+.section-hint{font-size:12px; color:var(--muted); margin-bottom:12px;}
+.toolbar-row{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;}
+
+.toast{
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+  background:var(--ink); color:#fff; padding:11px 20px; border-radius:var(--radius); font-size:13px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.2); z-index:999; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s;
+}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(-6px);}
+
+.landing-screen{
+  position:fixed; inset:0; background:var(--paper); z-index:800;
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.landing-card{
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+  padding:44px 40px; width:420px; max-width:100%; text-align:center;
+  box-shadow:0 10px 34px rgba(28,43,58,0.08);
+}
+.landing-card h1{font-size:22px; color:var(--ink);}
+.landing-card .sub{font-size:12.5px; color:var(--muted); font-weight:500;}
+.landing-field{text-align:left; margin-top:16px;}
+.landing-field label{display:block; font-size:11.5px; font-weight:700; color:var(--ink-soft); margin-bottom:6px;}
+
+.modal-overlay{
+  display:none; position:fixed; inset:0; background:rgba(20,26,32,0.55); z-index:900;
+  align-items:center; justify-content:center;
+}
+.modal-overlay.show{display:flex;}
+.modal-box{
+  background:#fff; border-radius:var(--radius); width:560px; max-width:92vw; max-height:86vh;
+  overflow-y:auto; box-shadow:0 12px 40px rgba(0,0,0,0.25);
+}
+.modal-head{
+  display:flex; justify-content:space-between; align-items:center; padding:16px 20px;
+  border-bottom:1px solid var(--line); position:sticky; top:0; background:#fff;
+}
+.modal-head h3{font-size:16px;}
+.modal-body{padding:18px 20px 22px;}
+.modal-label{font-size:12px; font-weight:700; color:var(--ink-soft); margin-bottom:6px; display:block;}
+.setup-steps{margin:0 0 4px; padding-left:18px; font-size:12.5px; color:var(--ink-soft); line-height:1.8;}
+.script-box{
+  width:100%; height:170px; margin-top:8px; font-family:'SFMono-Regular', Consolas, monospace; font-size:11px;
+  padding:10px; border:1px solid var(--line); border-radius:var(--radius); background:var(--paper); resize:vertical;
+}
+
+::-webkit-scrollbar{width:9px; height:9px;}
+::-webkit-scrollbar-thumb{background:#D3CFC3; border-radius:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="landingScreen" class="landing-screen">
+    <div class="landing-card">
+      <h1>2026년 2차 스쿨실링예산 조정</h1>
+      <div class="sub" style="margin-bottom:26px;">청강문화산업대학교 전략지원처 · 스쿨별 예산 실링조정 · <span id="landingVersion"></span></div>
+      <div class="landing-field">
+        <label>작성자명</label>
+        <input id="landingOwnerInput" class="search-input" placeholder="이름을 입력하세요">
+      </div>
+      <div class="landing-field">
+        <label>스쿨 선택</label>
+        <select id="landingSchoolSelect" class="school-select"></select>
+      </div>
+      <button class="btn btn-primary" style="width:100%; margin-top:16px; padding:12px; font-size:14px;" onclick="startApp()">예산조정 시작</button>
+    </div>
+  </div>
+
+  <div id="mainApp" style="display:none; flex-direction:column; flex:1; min-height:0;">
+  <header class="topbar">
+    <div class="brand">
+      <h1>2026년 2차 스쿨실링예산 조정</h1>
+      <div class="sub">청강문화산업대학교 전략지원처 · 스쿨별 예산 실링조정 · <span id="topbarVersion"></span></div>
+    </div>
+    <div class="tabbar">
+      <button class="tabbtn active" data-tab="adjust" onclick="switchTab('adjust')">조정 작업</button>
+      <button class="tabbtn" data-tab="consolidate" onclick="switchTab('consolidate')">취합</button>
+    </div>
+    <div class="topbar-spacer"></div>
+    <button class="btn btn-ghost" id="sheetSendBtn" onclick="sendToGoogleSheet()" style="border-color:rgba(255,255,255,0.35); color:#fff; background:transparent;">구글시트로 전송</button>
+    <button class="btn btn-outline" onclick="exportChanges()">조정내역 내보내기</button>
+    <button class="btn btn-outline" onclick="openSettingsModal()" title="구글시트 연동 설정">⚙ 연동설정</button>
+  </header>
+
+  <div class="summary-strip" id="summaryStrip"></div>
+
+  <div class="modal-overlay" id="settingsModal" onclick="if(event.target===this) closeSettingsModal()">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>구글시트 연동 설정</h3>
+        <button class="icon-btn" onclick="closeSettingsModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label class="modal-label">Apps Script 웹앱 URL</label>
+        <div style="display:flex; gap:8px;">
+          <input id="sheetUrlInput" class="search-input" placeholder="https://script.google.com/macros/s/xxxx/exec" style="flex:1;">
+          <button class="btn btn-ghost" onclick="saveSheetUrl()">저장</button>
+        </div>
+        <div id="sheetUrlStatus" class="section-hint" style="margin-top:6px;"></div>
+
+        <div style="margin-top:20px; border-top:1px solid var(--line-soft); padding-top:16px;">
+          <div class="modal-label">설정 방법</div>
+          <ol class="setup-steps">
+            <li>구글드라이브에서 새 스프레드시트를 만듭니다.</li>
+            <li>상단 메뉴 <b>확장 프로그램 &gt; Apps Script</b>를 엽니다.</li>
+            <li>기본 코드를 지우고 아래 코드를 붙여넣은 뒤 저장합니다.</li>
+            <li><b>배포 &gt; 새 배포</b> &gt; 유형: 웹앱 선택 &gt; 실행 사용자: 나, 액세스 권한: <b>전체</b>로 설정 후 배포합니다.</li>
+            <li>"Google hasn't verified this app" 경고가 뜨면 본인이 만든 스크립트이므로 안전합니다 — <b>Advanced</b> &gt; <b>Go to [프로젝트명] (unsafe)</b> &gt; <b>Allow</b> 순으로 진행하세요.</li>
+            <li>발급된 웹앱 URL을 위 입력창에 붙여넣고 저장합니다.</li>
+          </ol>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+            <div class="modal-label" style="margin-bottom:0;">Apps Script 코드</div>
+            <button class="btn btn-ghost" onclick="copyAppsScript()">코드 복사</button>
+          </div>
+          <textarea id="appsScriptCode" class="script-box" readonly></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal-box" style="width:440px;">
+      <div class="modal-body" style="padding-top:26px;">
+        <p id="confirmMessage" style="font-size:14px; line-height:1.7; margin:0 0 22px; color:var(--ink);"></p>
+        <div id="confirmButtons" style="display:flex; justify-content:flex-end; gap:8px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="newBizModal">
+    <div class="modal-box" style="width:520px;">
+      <div class="modal-head">
+        <h3>신규 사업 추가</h3>
+        <button class="icon-btn" onclick="closeNewBizModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="landing-field" style="margin-top:0;">
+          <label>사업명 *</label>
+          <input id="newBizName" class="search-input" placeholder="사업명을 입력하세요">
+        </div>
+        <div class="landing-field">
+          <label>주요내용 *</label>
+          <textarea id="newBizContent" class="script-box" style="height:70px; font-family:inherit; font-size:13px;" placeholder="사업의 주요내용을 입력하세요"></textarea>
+        </div>
+        <div class="landing-field">
+          <label>사업수립배경 *</label>
+          <textarea id="newBizBackground" class="script-box" style="height:70px; font-family:inherit; font-size:13px;" placeholder="사업수립배경을 입력하세요"></textarea>
+        </div>
+        <div class="landing-field">
+          <label>사업수립목표 *</label>
+          <textarea id="newBizGoal" class="script-box" style="height:70px; font-family:inherit; font-size:13px;" placeholder="사업수립목표를 입력하세요"></textarea>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:18px;">
+          <button class="btn btn-ghost" onclick="closeNewBizModal()">취소</button>
+          <button class="btn btn-primary" onclick="saveNewBiz()">등록</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="newAccountModal">
+    <div class="modal-box" style="width:480px;">
+      <div class="modal-head">
+        <h3>계정과목 추가</h3>
+        <button class="icon-btn" onclick="closeNewAccountModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="landing-field" style="margin-top:0;">
+          <label>재원 선택 *</label>
+          <select id="newAcctFundType" class="school-select" onchange="onAcctFundTypeChange()">
+            <option value="등록금회계">등록금회계</option>
+            <option value="혁신사업">혁신사업</option>
+          </select>
+        </div>
+        <div class="landing-field">
+          <label>계정과목명 *</label>
+          <select id="newAcctName" class="school-select"></select>
+          <div class="section-hint" style="margin-top:6px;">재원 금액은 산출근거 합계로 자동 계산됩니다.</div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:18px;">
+          <button class="btn btn-ghost" onclick="closeNewAccountModal()">취소</button>
+          <button class="btn btn-primary" onclick="saveNewAccount()">등록</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <div id="view-adjust" class="view active">
+      <div class="sidebar">
+        <div class="sidebar-controls">
+          <select id="schoolFilter" class="school-select" onchange="renderBizList(); renderSummary();"></select>
+          <input id="searchInput" class="search-input" placeholder="사업명 검색" oninput="renderBizList()">
+          <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-soft); padding:2px 2px;">
+            <input type="checkbox" id="onlyChangedToggle" onchange="renderBizList()"> 조정된 사업만 보기
+          </label>
+          <button class="btn btn-ghost" style="width:100%;" onclick="openNewBizModal()">+ 신규 사업 추가</button>
+        </div>
+        <div class="biz-list" id="bizList"></div>
+      </div>
+      <div class="detail-panel" id="detailPanel">
+        <div class="empty-state">
+          <h2>왼쪽에서 사업을 선택하세요</h2>
+          <div>사업명을 클릭하면 계정과목별 산출근거가 표시됩니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-consolidate" class="view">
+      <div>
+        <div class="section-title">조정내역 파일 취합</div>
+        <div class="section-hint">각 스쿨에서 "조정내역 내보내기"로 받은 JSON 파일을 아래에 업로드하면 하나의 표로 통합됩니다.</div>
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+          <h3>파일을 클릭하여 선택하거나 이곳에 드래그하세요</h3>
+          <div>.json 파일 (여러 개 동시 선택 가능)</div>
+          <input type="file" id="fileInput" accept=".json" multiple style="display:none" onchange="handleFiles(this.files)">
+        </div>
+        <div class="file-chip-row" id="fileChipRow" style="margin-top:12px;"></div>
+        <div style="margin-top:14px; display:flex; align-items:center; gap:10px;">
+          <button class="btn btn-ghost" onclick="loadFromGoogleSheet()">구글시트에서 불러오기</button>
+          <span class="section-hint" style="margin-bottom:0;" id="sheetLoadStatus">연동설정에서 웹앱 URL을 등록하면 이 버튼으로 실시간 취합본을 불러올 수 있습니다.</span>
+        </div>
+      </div>
+
+      <div id="consSummaryWrap"></div>
+
+      <div>
+        <div class="toolbar-row">
+          <div class="section-title" style="margin-bottom:0;">통합 조정내역</div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-ghost" onclick="exportConsolidatedJSON()">JSON으로 내보내기</button>
+            <button class="btn btn-primary" onclick="exportConsolidatedExcel()">엑셀로 내보내기</button>
+          </div>
+        </div>
+        <div class="cons-table-wrap" style="margin-top:12px;">
+          <table class="cons-table" id="consTable">
+            <thead>
+              <tr>
+                <th>스쿨</th><th>사업명</th><th>계정과목</th>
+                <th>조정 전 내용</th><th class="num-col">조정 전 금액</th>
+                <th>조정 후 내용</th><th class="num-col">조정 후 금액</th>
+                <th class="num-col">조정 전 합계</th><th class="num-col">조정 후 합계</th><th class="num-col">증감</th>
+                <th>출처</th><th>제출시각</th>
+              </tr>
+            </thead>
+            <tbody id="consTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const RAW_DATA = [{"school": "패션뷰티스타일스쿨", "dept": "패션뷰티스타일스쿨행정", "name": "혁신사업)패션_실험실습 기자재", "lineItems": [{"gwanCode": "120000", "gwan": "비유동자산", "hangCode": "122000", "hang": "유형자산", "acctCode": "122040", "acctName": "기계기구", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 34300000, "AID사업": 0, "기타": 0}, "total": 34300000, "details": [{"amount": 18900000, "desc": "노후된 미싱교체 : 약 150만원*10대 =1500만원, 오버록 1대, 인터록 1대 등"}, {"amount": 8800000, "desc": "노후로 인한 빔 프로젝트 구매 2대 (어401호, 어402호)"}, {"amount": 6600000, "desc": "디지털 패션스타일교육을 위한 3D CLO 소프트웨어 구입_6,600천원_부가세포함"}], "id": "b12_l0", "fundType": "혁신사업"}], "id": "b12"}, {"school": "패션뷰티스타일스쿨", "dept": "패션뷰티스타일스쿨행정", "name": "스쿨운영비", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4230", "hang": "운영비", "acctCode": "4239", "acctName": "기타운영비", "funds": {"등록금회계": 2462000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 2462000, "details": [{"amount": -500000, "desc": "스쿨 교직원 AI 구독 지원 전용"}, {"amount": 2500000, "desc": "스쿨운영비 : 학기당 125만원 *2회 = 250만원"}, {"amount": 462000, "desc": "추경 462,000원"}], "id": "b13_l0", "fundType": "등록금회계"}], "id": "b13"}, {"school": "패션뷰티스타일스쿨", "dept": "패션뷰티스타일스쿨행정", "name": "혁신사업)패션_실험실습 소모품 ", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422040", "acctName": "실험실습비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 26511000, "AID사업": 0, "기타": 0}, "total": 26511000, "details": [{"amount": 1000000, "desc": "실험실습물품 정비비: 1,000,000원"}, {"amount": 25511000, "desc": "실험실습소모품구입 1,2학기 "}], "id": "b14_l0", "fundType": "혁신사업"}], "id": "b14"}, {"school": "패션뷰티스타일스쿨", "dept": "패션뷰티스타일스쿨행정", "name": "강사 및 겸임교원 강의료", "lineItems": [{"gwanCode": "4100", "gwan": "보수", "hangCode": "4110", "hang": "교원보수", "acctCode": "4115", "acctName": "시간강의료", "funds": {"등록금회계": 98604000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 98604000, "details": [{"amount": 80784000, "desc": "강사: 12명*6시수*33,000원*17주*2개 학기"}, {"amount": 17820000, "desc": "겸임: 2명*9시수*33,000원*15주*2개 학기"}], "id": "b15_l0", "fundType": "등록금회계"}], "id": "b15"}, {"school": "패션뷰티스타일스쿨", "dept": "패션뷰티스타일스쿨행정", "name": "행정소모품", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4220", "hang": "일반관리비", "acctCode": "4223", "acctName": "소모품비", "funds": {"등록금회계": 3300000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 3300000, "details": [{"amount": -500000, "desc": "스쿨 교직원 AI 구독 지원"}, {"amount": 1020000, "desc": "장비 A/S 유지관리:프린터장비 임대료:85,000*12=1,020천원, 컬러토너구입비"}, {"amount": 2780000, "desc": "행정소모품구입: 복사용지,프린터토너,기타행정용품"}], "id": "b16_l0", "fundType": "등록금회계"}], "id": "b16"}, {"school": "패션뷰티스타일스쿨", "dept": "패션뷰티스타일스쿨행정", "name": "전략적 입시네트워크 구축", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4230", "hang": "운영비", "acctCode": "4235", "acctName": "홍보비", "funds": {"등록금회계": 18000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 18000000, "details": [{"amount": 3500000, "desc": "네트워크 구축: 입시 오프라인 홍보경비"}, {"amount": 7060000, "desc": "온오프라인 홍보 _SNS 홍보, 패션뷰티토크쇼:230만원, 입시홍보 콘텐츠 제작:140만원, 홍보우편물:66만원, 2027 Meet&Greet 진행비 : 130만원"}, {"amount": 7440000, "desc": "청강 패션뷰티스타일 공모전"}], "id": "b17_l0", "fundType": "등록금회계"}], "id": "b17"}, {"school": "패션뷰티스타일스쿨", "dept": "패션뷰티스타일스쿨행정", "name": "전공연계 비교과프로그램 지원사업", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 2000000, "AID사업": 0, "기타": 0}, "total": 2000000, "details": [{"amount": 2000000, "desc": "비교과) 전공동아리 활동 지원(재료비 및 전시체험비_결과물 전자책 제작 등) "}], "id": "b18_l0", "fundType": "혁신사업"}], "id": "b18"}, {"school": "패션뷰티스타일스쿨", "dept": "패션뷰티스타일스쿨행정", "name": "전임교원 초과강의료", "lineItems": [{"gwanCode": "4100", "gwan": "보수", "hangCode": "4110", "hang": "교원보수", "acctCode": "4113", "acctName": "교원제수당", "funds": {"등록금회계": 2900000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 2900000, "details": [{"amount": -500000, "desc": "스쿨 교직원 AI 구독 지원"}, {"amount": 3400000, "desc": "전임 초과강의료: 1학기: 1,200,000원/  2학기: 1,200,000"}], "id": "b19_l0", "fundType": "등록금회계"}], "id": "b19"}, {"school": "패션뷰티스타일스쿨", "dept": "패션뷰티스타일스쿨행정", "name": "beyond  school 청강 스타일 프리미에르 페스타", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 30000000, "AID사업": 0, "기타": 0}, "total": 30000000, "details": [{"amount": 6200000, "desc": "글로벌패션페스타 및 전시참가: 6,200,000 "}, {"amount": 700000, "desc": "산업체 전문가 회의비: 400,000원, 다과비 300,000"}, {"amount": 10000000, "desc": "패션쇼진행(모델, 메이크업&헤어, 조명, 음향, 장소 등) 10,000,000원"}, {"amount": 2700000, "desc": "패션전시(전시& 디스플레이용품) 2,700,000원"}, {"amount": 3000000, "desc": "패션콘텐츠 개발(재료, 시제품개발, 제작비) 3,000,000원"}, {"amount": 7400000, "desc": "패션화보 및 영상 제작(촬영,모델,메이크업,스타일링) 7,400,000원"}], "id": "b20_l0", "fundType": "혁신사업"}], "id": "b20"}, {"school": "패션뷰티스타일스쿨", "dept": "패션뷰티스타일스쿨행정", "name": "패션 디지털 콘텐츠 창작 지원 사업", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 35000000, "AID사업": 0, "기타": 0}, "total": 35000000, "details": [{"amount": 5200000, "desc": "AR 콘텐츠 개발비 5,200,000"}, {"amount": 1400000, "desc": "시제품 제작비"}, {"amount": 2000000, "desc": "영상편집 2,000,000"}, {"amount": 4500000, "desc": "인건비(콘텐츠 개발 전문가 자문, 콘텐츠 제작비, 전시 및 행사 도우비) 4,500,000"}, {"amount": 9000000, "desc": "전시비(대관료, 빔프로젝트, 가벽, 진행경비) 9,000,000"}, {"amount": 10000000, "desc": "패션쇼진행비 10,000,000"}, {"amount": 2200000, "desc": "행사촬영비 2,200,000"}, {"amount": 700000, "desc": "회의비 700,000"}], "id": "b21_l0", "fundType": "혁신사업"}], "id": "b21"}, {"school": "패션뷰티스타일스쿨", "dept": "패션뷰티스타일스쿨행정", "name": "패션뷰티 산업체 프로젝트 사업", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 10000000, "AID사업": 0, "기타": 0}, "total": 10000000, "details": [{"amount": 900000, "desc": "자문료(3명*300,000원) : 900천원"}, {"amount": 300000, "desc": "팀별 프로젝트 다과비"}, {"amount": 300000, "desc": "팀별 프로젝트 진행 회의비(산업체 인사,학생): 300,000원"}, {"amount": 3000000, "desc": "프로젝트 콘텐츠제작(제품개발):3,000,000원"}, {"amount": 5500000, "desc": "프로젝트진행비 (참가비, 화보,영상 촬영): 5,500,000원"}], "id": "b22_l0", "fundType": "혁신사업"}], "id": "b22"}, {"school": "패션뷰티스타일스쿨", "dept": "패션뷰티스타일스쿨행정", "name": "스쿨 브랜드 확산사업", "lineItems": [{"gwanCode": "4300", "gwan": "연구학생경비", "hangCode": "4330", "hang": "입시관리비", "acctCode": "4332", "acctName": "입시경비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": 0, "desc": "본부예산"}], "id": "b23_l0", "fundType": "등록금회계"}], "id": "b23"}, {"school": "패션뷰티스타일스쿨", "dept": "패션뷰티스타일스쿨행정", "name": "스쿨 교직원 AI 구독 지원", "lineItems": [{"gwanCode": "4300", "gwan": "연구학생경비", "hangCode": "4320", "hang": "학생경비", "acctCode": "4323", "acctName": "실험실습비", "funds": {"등록금회계": 1500000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 1500000, "details": [{"amount": 1500000, "desc": "스쿨 교직원 AI 구독 지원"}], "id": "b24_l0", "fundType": "등록금회계"}], "id": "b24"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "혁신사업)공연예술_실험실습 기자재", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422040", "acctName": "실험실습비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 10000000, "AID사업": 0, "기타": 0}, "total": 10000000, "details": [{"amount": 0, "desc": "노후 기자재 교체 10,000,000"}, {"amount": 10000000, "desc": "신규 기자재 구입 10,000,000"}], "id": "b25_l0", "fundType": "혁신사업"}], "id": "b25"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "전임교원 초과강의료", "lineItems": [{"gwanCode": "4100", "gwan": "보수", "hangCode": "4110", "hang": "교원보수", "acctCode": "4113", "acctName": "교원제수당", "funds": {"등록금회계": 6000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 6000000, "details": [{"amount": 3000000, "desc": "(1학기) 전임초과강의료 : 20시수 * 15주 * 10,000원"}, {"amount": 3000000, "desc": "(2학기) 전임초과강의료 : 20시수 * 15주 * 10,000원"}], "id": "b26_l0", "fundType": "등록금회계"}], "id": "b26"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "강사 및 겸임교원 강의료", "lineItems": [{"gwanCode": "4100", "gwan": "보수", "hangCode": "4110", "hang": "교원보수", "acctCode": "4115", "acctName": "시간강의료", "funds": {"등록금회계": 218570000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 218570000, "details": [{"amount": 27360000, "desc": "1학기 겸임 시수 24시간 * 15주* 38,000(전년도 겸임 평균)*2"}, {"amount": 2000000, "desc": "예비비 2,000,000원"}, {"amount": 189210000, "desc": "학기 강사 시수 159시간 * 17주 * 35,000(전년도 강사비 평균)*2"}], "id": "b27_l0", "fundType": "등록금회계"}], "id": "b27"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "행정소모품비", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4220", "hang": "일반관리비", "acctCode": "4223", "acctName": "소모품비", "funds": {"등록금회계": 1620000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 1620000, "details": [{"amount": 1020000, "desc": "복사기 임대료"}, {"amount": 600000, "desc": "행정소모품"}], "id": "b28_l0", "fundType": "등록금회계"}], "id": "b28"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "스쿨운영비", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4230", "hang": "운영비", "acctCode": "4239", "acctName": "기타운영비", "funds": {"등록금회계": 2500000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 2500000, "details": [{"amount": 2500000, "desc": "야근식대, 내방손님(생수,커피 등), 학생지원활동 등"}], "id": "b29_l0", "fundType": "등록금회계"}], "id": "b29"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "학생대상 학습역량시너지강화를 위한 비교과 지원_프로덕션대상 텍스트연구방법론 워크숍", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422010", "acctName": "인건비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 2000000, "AID사업": 0, "기타": 0}, "total": 2000000, "details": [{"amount": 2000000, "desc": "특강 4회 * 500,000원"}], "id": "b30_l0", "fundType": "혁신사업"}], "id": "b30"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "실험실습소모품", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422040", "acctName": "실험실습비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 1856000, "AID사업": 0, "기타": 0}, "total": 1856000, "details": [{"amount": 1856000, "desc": "실험실습소모품"}], "id": "b31_l0", "fundType": "혁신사업"}], "id": "b31"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "지역투어공연을 위한 작품개발과 현장진출", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 13500000, "AID사업": 0, "기타": 0}, "total": 13500000, "details": [{"amount": 200000, "desc": "답사비"}, {"amount": 3000000, "desc": "숙박비 750,000 * 4회"}, {"amount": 3000000, "desc": "식비 + 다과비 20,000 * 10명 * 5식 * 4회 (실집행율 70% 적용)"}, {"amount": 100000, "desc": "예비비"}, {"amount": 2800000, "desc": "차량 임대료 화물차 편도 350,000 * 4회 * 2회 왕복"}, {"amount": 3600000, "desc": "차량 임차료 미니버스 900,000 * 4회"}, {"amount": 800000, "desc": "홍보비, 리플렛 디자인 및 제작 외"}], "id": "b32_l0", "fundType": "혁신사업"}], "id": "b32"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "CKPAS 브랜딩 사업", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4230", "hang": "운영비", "acctCode": "4235", "acctName": "홍보비", "funds": {"등록금회계": 5000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 5000000, "details": [{"amount": 5000000, "desc": "스쿨 프로덕션 자료집(팸플릿 제작을 위한 원고료 및 제작) 발간 5,000,000"}], "id": "b33_l0", "fundType": "등록금회계"}], "id": "b33"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "공연예술_실습 라이선스 관리", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422040", "acctName": "실험실습비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 8000000, "AID사업": 0, "기타": 0}, "total": 8000000, "details": [{"amount": 8000000, "desc": "실습 라이선스 13,000,000"}], "id": "b34_l0", "fundType": "혁신사업"}], "id": "b34"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "창작프로덕션 구축을 위한 현장형 개인역량강화 인큐베이팅_CK On Stage", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 82343790, "AID사업": 0, "기타": 0}, "total": 82343790, "details": [{"amount": 20000000, "desc": "CK 온스테이지 DIMF/대학연극제 경연대회 참가(제작비, 운반비, 참가 제반사항 등)"}, {"amount": 21000000, "desc": "대관료 한예극장 갤러리, 극장 대관료"}, {"amount": 35000000, "desc": "무대 제작 소모품비"}, {"amount": 3000000, "desc": "무대, 소품, 조명 및 음향장비, 학생 수송, 운반비"}, {"amount": 0, "desc": "음향 용역비 6,000,000"}, {"amount": 1023790, "desc": "제작비 추가"}, {"amount": 2320000, "desc": "출장여비 및 예비비"}], "id": "b35_l0", "fundType": "혁신사업"}, {"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4230", "hang": "운영비", "acctCode": "4235", "acctName": "홍보비", "funds": {"등록금회계": 9000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 9000000, "details": [{"amount": 3000000, "desc": "공연사진 촬영비 3,000,000원"}, {"amount": 6000000, "desc": "홍보 자료 도출, 제작(디자인 인건비 4,000,000원),+  현수기 제작비 2,000,000원"}], "id": "b35_l1", "fundType": "등록금회계"}], "id": "b35"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "학습역량 강화를 위한 공연콘텐츠 제작 지원_실습공연", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422040", "acctName": "실험실습비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 7000000, "AID사업": 0, "기타": 0}, "total": 7000000, "details": [{"amount": 7000000, "desc": "실습공연 2학기 3편"}], "id": "b36_l0", "fundType": "혁신사업"}, {"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422040", "acctName": "실험실습비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 7569950, "AID사업": 0, "기타": 0}, "total": 7569950, "details": [{"amount": -430050, "desc": "실습공연"}, {"amount": 8000000, "desc": "실습공연 1학기 4편"}], "id": "b36_l1", "fundType": "혁신사업"}], "id": "b36"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "학습역량 강화를 위한 공연콘텐츠 제작 지원_연출프로젝트", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422040", "acctName": "실험실습비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 2906260, "AID사업": 0, "기타": 0}, "total": 2906260, "details": [{"amount": 2906260, "desc": "1학기 단막 3편(연극 4분의 1, 좋아하고 있어, 과자집에 살아요)"}], "id": "b37_l0", "fundType": "혁신사업"}, {"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422040", "acctName": "실험실습비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 4000000, "AID사업": 0, "기타": 0}, "total": 4000000, "details": [{"amount": 4000000, "desc": "2학기 단막 3편, 장막 3편"}, {"amount": 0, "desc": "화이트 모듈 무대 제작비"}], "id": "b37_l1", "fundType": "혁신사업"}], "id": "b37"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "학습역량 강화를 위한 뮤지컬콘텐츠 제작 지원_손바닥뮤지컬 창작 및 제작", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422040", "acctName": "실험실습비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 3500000, "AID사업": 0, "기타": 0}, "total": 3500000, "details": [{"amount": 3500000, "desc": "손바닥 뮤지컬 제작 및 소품비 2편 * 1,750,000"}], "id": "b38_l0", "fundType": "혁신사업"}], "id": "b38"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "자발적 프로덕션을 통한 창작지원_셰익스피어 프로젝트", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422040", "acctName": "실험실습비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 1500000, "AID사업": 0, "기타": 0}, "total": 1500000, "details": [{"amount": 1500000, "desc": "공연 제작비(소품 및 의상 등)"}], "id": "b39_l0", "fundType": "혁신사업"}], "id": "b39"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "전공 특성화를 위한 전공워크숍_뮤지컬", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422010", "acctName": "인건비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 1500000, "AID사업": 0, "기타": 0}, "total": 1500000, "details": [{"amount": 1500000, "desc": "전공특강 워크숍 300,000 * 5회"}], "id": "b40_l0", "fundType": "혁신사업"}], "id": "b40"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "공연 현장 탐방을 통한 전공역량강화 지원_연극영상, 연출극작 ", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422010", "acctName": "인건비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 1200000, "AID사업": 0, "기타": 0}, "total": 1200000, "details": [{"amount": 1200000, "desc": "현장 전문가 특강 300,000 * 3회"}], "id": "b41_l0", "fundType": "혁신사업"}, {"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422040", "acctName": "실험실습비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 2300000, "AID사업": 0, "기타": 0}, "total": 2300000, "details": [{"amount": 2300000, "desc": "공연 현장 탐방을 통한 역량강화 지원사업(공연장 관람료)"}], "id": "b41_l1", "fundType": "혁신사업"}], "id": "b41"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "네트워킹 활성화를 통한 동문회 활성화", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4230", "hang": "운영비", "acctCode": "4239", "acctName": "기타운영비", "funds": {"등록금회계": 1000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 1000000, "details": [{"amount": 300000, "desc": "강사료 300,000원"}, {"amount": 700000, "desc": "대관료 및 운영비 "}], "id": "b42_l0", "fundType": "등록금회계"}], "id": "b42"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "디지털 프로덕션 디자인워크숍", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422010", "acctName": "인건비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 2400000, "AID사업": 0, "기타": 0}, "total": 2400000, "details": [{"amount": 2400000, "desc": "현장전문가 특강비 : 300,000*8일"}], "id": "b43_l0", "fundType": "혁신사업"}], "id": "b43"}, {"school": "공연예술스쿨", "dept": "공연예술스쿨행정", "name": "스쿨 교직원 AI 구독 지원", "lineItems": [{"gwanCode": "4300", "gwan": "연구학생경비", "hangCode": "4320", "hang": "학생경비", "acctCode": "4323", "acctName": "실험실습비", "funds": {"등록금회계": 2500000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 2500000, "details": [{"amount": 2500000, "desc": "스쿨 교직원 AI 구독 지원"}], "id": "b44_l0", "fundType": "등록금회계"}], "id": "b44"}, {"school": "애니메이션스쿨", "dept": "애니메이션스쿨행정", "name": "스쿨운영비", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4230", "hang": "운영비", "acctCode": "4239", "acctName": "기타운영비", "funds": {"등록금회계": 7000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 7000000, "details": [{"amount": 7000000, "desc": "- 비교과프로그램 운영, 학생 지도(MT 등), 야근식대(2,500,000*4분기): "}], "id": "b45_l0", "fundType": "등록금회계"}], "id": "b45"}, {"school": "애니메이션스쿨", "dept": "애니메이션스쿨행정", "name": "실험실습소모품", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422040", "acctName": "실험실습비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 11500000, "AID사업": 0, "기타": 0}, "total": 11500000, "details": [{"amount": 10000000, "desc": "-정규 교과 소모품비: 10.000천원(학생 1인당 약 13,000원)"}, {"amount": 1500000, "desc": "1착추경(소모품 부족으로 인해 추가반영)"}], "id": "b46_l0", "fundType": "혁신사업"}], "id": "b46"}, {"school": "애니메이션스쿨", "dept": "애니메이션스쿨행정", "name": "강사 및 겸임교원 강의료", "lineItems": [{"gwanCode": "4100", "gwan": "보수", "hangCode": "4110", "hang": "교원보수", "acctCode": "4115", "acctName": "시간강의료", "funds": {"등록금회계": 477346000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 477346000, "details": [{"amount": 443190000, "desc": "-강사: 264,990천원 (30명*17주*평균8시수*33,000원* 2개 학기)   * 시간당 강사료 33,000원 적용\n-겸임: 178,200천원 (18명*15주*평균10시수*33,000원*2개 학기)   * 시간당 강사료 33,000원 적용"}, {"amount": 34156000, "desc": "1차 추경"}], "id": "b47_l0", "fundType": "등록금회계"}], "id": "b47"}, {"school": "애니메이션스쿨", "dept": "애니메이션스쿨행정", "name": "전임교원 초과강의료", "lineItems": [{"gwanCode": "4100", "gwan": "보수", "hangCode": "4110", "hang": "교원보수", "acctCode": "4113", "acctName": "교원제수당", "funds": {"등록금회계": 15525000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 15525000, "details": [{"amount": 15525000, "desc": "-전임 17명*450천원*2학기"}], "id": "b48_l0", "fundType": "등록금회계"}], "id": "b48"}, {"school": "애니메이션스쿨", "dept": "애니메이션스쿨행정", "name": "행정소모품", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4220", "hang": "일반관리비", "acctCode": "4223", "acctName": "소모품비", "funds": {"등록금회계": 5600000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 5600000, "details": [{"amount": 6000000, "desc": " - 행정소모품 6,000천원 (복사기 토너, 임대료 등 포함)"}, {"amount": -400000, "desc": "스쿨 교직원 AI 구독 지원 전용"}], "id": "b49_l0", "fundType": "등록금회계"}], "id": "b49"}, {"school": "애니메이션스쿨", "dept": "애니메이션스쿨행정", "name": "직무역량강화를 위한 모델드로잉 지원 사업", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422010", "acctName": "인건비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 30700000, "AID사업": 0, "기타": 0}, "total": 30700000, "details": [{"amount": 9700000, "desc": "1차 추경(코스튬플레수업으로 인해 증액)"}, {"amount": 8316000, "desc": "1학기: 9회*7분반*2시간*66,000원"}, {"amount": 8316000, "desc": "2학기: 9회*7분반*2시간*66,000원"}, {"amount": 4368000, "desc": "예비비"}], "id": "b50_l0", "fundType": "혁신사업"}], "id": "b50"}, {"school": "애니메이션스쿨", "dept": "애니메이션스쿨행정", "name": "창의적 교육환경 구축 리모델링 사업", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4210", "hang": "시설관리비", "acctCode": "4219", "acctName": "기타시설관리비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": 30000000, "desc": "스쿨실링의 10%내에서 매년 교육환경 개선을 하고 있음"}, {"amount": -30000000, "desc": "혁신사업비로 이관"}], "id": "b51_l0", "fundType": "등록금회계"}, {"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 30000000, "AID사업": 0, "기타": 0}, "total": 30000000, "details": [{"amount": 30000000, "desc": "스쿨실링의 10%내에서 매년 교육환경 개선을 하고 있음"}], "id": "b51_l1", "fundType": "혁신사업"}], "id": "b51"}, {"school": "애니메이션스쿨", "dept": "애니메이션스쿨행정", "name": "학생 행사 전시지원 갤러리봄", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 4500000, "AID사업": 0, "기타": 0}, "total": 4500000, "details": [{"amount": 4500000, "desc": "전시 행사 용품및인쇄물 디자인 및 제작(25회*125천원) -외부전문가초청전시 및 기획전시 대여료1회:1,500천원,소모품비(액지,폼보드 등) 500천원"}], "id": "b52_l0", "fundType": "혁신사업"}], "id": "b52"}, {"school": "애니메이션스쿨", "dept": "애니메이션스쿨행정", "name": "학습동기형성강화를 위한 애니토크", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422010", "acctName": "인건비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 864000, "AID사업": 0, "기타": 0}, "total": 864000, "details": [{"amount": 864000, "desc": "통역인건비 12천원(시간당)*3시간*12회*2학기"}], "id": "b53_l0", "fundType": "혁신사업"}], "id": "b53"}, {"school": "애니메이션스쿨", "dept": "애니메이션스쿨행정", "name": "전공역량강화를 위한 강의지원 사업", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422010", "acctName": "인건비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 8640000, "AID사업": 0, "기타": 0}, "total": 8640000, "details": [{"amount": 13680000, "desc": "-교원 통역(2명*12천원*19시간*15주*2학기"}, {"amount": -5040000, "desc": "1차 추경반영(1학기 1명, 2학기 2명)"}], "id": "b54_l0", "fundType": "혁신사업"}], "id": "b54"}, {"school": "애니메이션스쿨", "dept": "애니메이션스쿨행정", "name": "취창업을 위한 동문 허브 활성화 및 네트위킹 플랫폼 구축", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 3600000, "AID사업": 0, "기타": 0}, "total": 3600000, "details": [{"amount": 3600000, "desc": "플랫폼 관리및 콘텐츠제작:1,800,000원/앱사용료 등 직접경비:1,240,000원/회의비 등 간접경비:540,000원"}], "id": "b55_l0", "fundType": "혁신사업"}], "id": "b55"}, {"school": "애니메이션스쿨", "dept": "애니메이션스쿨행정", "name": "진화적 교육환경 구축 사업 (기자재)", "lineItems": [{"gwanCode": "120000", "gwan": "비유동자산", "hangCode": "122000", "hang": "유형자산", "acctCode": "122040", "acctName": "기계기구", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 168180000, "AID사업": 0, "기타": 0}, "total": 168180000, "details": [{"amount": -20000000, "desc": "1차 추경"}, {"amount": 91350000, "desc": "pc (29개*1개강의실*3,150천원)"}, {"amount": 44280000, "desc": "모니터 (30개*4개강의실*369천원)"}, {"amount": 33780000, "desc": "소프트웨어(누크,3d equalizer) emd"}, {"amount": 18770000, "desc": "의자 및 책상"}], "id": "b56_l0", "fundType": "혁신사업"}], "id": "b56"}, {"school": "애니메이션스쿨", "dept": "애니메이션스쿨행정", "name": "CKAF 청강애니페스티벌", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 34800000, "AID사업": 0, "기타": 0}, "total": 34800000, "details": [{"amount": 800000, "desc": "1차추경(만화캐릭터일러스트페어 참가, 인건비(2명), 기타"}, {"amount": 5000000, "desc": "교수님과 티타임 행사 2회+동계상영회\n인쇄 용역"}, {"amount": 2000000, "desc": "다과비"}, {"amount": 4000000, "desc": "도록 제작 용역비"}, {"amount": 2000000, "desc": "웹사이트 제작 용역"}, {"amount": 9000000, "desc": "진행도우미 인건비"}, {"amount": 1000000, "desc": "특별상영전 작품 대여비"}, {"amount": 4000000, "desc": "행사 및 공간연출"}, {"amount": 2000000, "desc": "행사재료 및 소모품"}, {"amount": 5000000, "desc": "홍보물 용역"}], "id": "b57_l0", "fundType": "혁신사업"}], "id": "b57"}, {"school": "애니메이션스쿨", "dept": "애니메이션스쿨행정", "name": "라이프드로잉 야외학습", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 7500000, "AID사업": 0, "기타": 0}, "total": 7500000, "details": [{"amount": 4500000, "desc": "버스임차비(1회당) 570,000x4회x2개 학기"}, {"amount": 600000, "desc": "예비비(운영비) 300,000x2개 학기"}, {"amount": 2400000, "desc": "입장료(티켓) 300,000x4회x2개 학기"}], "id": "b58_l0", "fundType": "혁신사업"}], "id": "b58"}, {"school": "애니메이션스쿨", "dept": "애니메이션스쿨행정", "name": "스쿨 교직원 AI 구독 지원", "lineItems": [{"gwanCode": "4300", "gwan": "연구학생경비", "hangCode": "4320", "hang": "학생경비", "acctCode": "4323", "acctName": "실험실습비", "funds": {"등록금회계": 400000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 400000, "details": [{"amount": 400000, "desc": "스쿨 교직원 AI 구독 지원"}], "id": "b59_l0", "fundType": "등록금회계"}], "id": "b59"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "전임교원 초과강의료", "lineItems": [{"gwanCode": "4100", "gwan": "보수", "hangCode": "4110", "hang": "교원보수", "acctCode": "4113", "acctName": "교원제수당", "funds": {"등록금회계": 17550000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 17550000, "details": [{"amount": 17550000, "desc": "전임 23명X2.5시수X15주X10,000원X2학기=17,250,000원 내외  "}], "id": "b60_l0", "fundType": "등록금회계"}], "id": "b60"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "실험실습소모품 구입", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422040", "acctName": "실험실습비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 15683000, "AID사업": 0, "기타": 0}, "total": 15683000, "details": [{"amount": 8683000, "desc": "수업용 소모품  및 복사용지 구입 8,683,000"}, {"amount": 7000000, "desc": "인쇄실 및 수업용 공용 소모품 구입 7,000,000"}], "id": "b61_l0", "fundType": "혁신사업"}], "id": "b61"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "행정소모품 구입", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4220", "hang": "일반관리비", "acctCode": "4223", "acctName": "소모품비", "funds": {"등록금회계": 5000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 5000000, "details": [{"amount": 5000000, "desc": "행정실 복사기 토너, 비품 구입 5,000,000원"}], "id": "b62_l0", "fundType": "등록금회계"}], "id": "b62"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "강사 및 겸임교원 강의료", "lineItems": [{"gwanCode": "4100", "gwan": "보수", "hangCode": "4110", "hang": "교원보수", "acctCode": "4115", "acctName": "시간강의료", "funds": {"등록금회계": 496724000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 496724000, "details": [{"amount": 461724000, "desc": " 26-1학기 기준 비전임교원 56명(강사 50명, 겸임2명, 특임4명)\n - 1학기 비전임교원 56명 X8.5시수X15주X33,000원X2학기\n   =471,240,000원 내외\n* 편성 예산(1학기 집행기준)\n   26-1학기 집행액 230,862,000\n   26-2학기 예산액 230,862,000"}, {"amount": 35000000, "desc": "[예산조정] 35,000,000원 증액"}], "id": "b63_l0", "fundType": "등록금회계"}], "id": "b63"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "스쿨 운영비", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4230", "hang": "운영비", "acctCode": "4239", "acctName": "기타운영비", "funds": {"등록금회계": 10000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 10000000, "details": [{"amount": 9000000, "desc": "스쿨 운영 물품 구입(생수, 차 등) 및 스쿨회의,워크숍,외래강사실 지원 등"}, {"amount": 1000000, "desc": "추가경정예산)운영비 증액"}], "id": "b64_l0", "fundType": "등록금회계"}], "id": "b64"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "스쿨교육 혁신을 위한 교강사 워크숍", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 3300000, "AID사업": 0, "기타": 0}, "total": 3300000, "details": [{"amount": 3300000, "desc": "식사 및 다과비(15,000원×90명=1,350,000원), 특강 강사료(300,000원) \n학기당 1,650,000원*2학기= 3,300,000원"}], "id": "b65_l0", "fundType": "혁신사업"}], "id": "b65"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "재학생 대상 수업능력 향상을 위한 모델드로잉 지원", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422040", "acctName": "실험실습비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 30000000, "AID사업": 0, "기타": 0}, "total": 30000000, "details": [{"amount": 8316000, "desc": "1학기 63회(9개분반)X66,000원X2시간=8,316,000"}, {"amount": 9000000, "desc": "1학기 84회(12개분반)X88,000원X2시간=14,784,000\n2학기 84회(12개분반)X88,000원X2시간=14,784,000\n예비비 432,000원 증반과 모델 시간급여 인상으로 인한 변경"}, {"amount": 10164000, "desc": "2학기 77회(11개분반)X66,000원X2시간=10,164,000"}, {"amount": 2520000, "desc": "예비비"}], "id": "b66_l0", "fundType": "혁신사업"}], "id": "b66"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "실험실습 기자재 구입", "lineItems": [{"gwanCode": "120000", "gwan": "비유동자산", "hangCode": "122000", "hang": "유형자산", "acctCode": "122040", "acctName": "기계기구", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 106117100, "AID사업": 0, "기타": 0}, "total": 106117100, "details": [{"amount": 71300000, "desc": "PC 31대 * 2,300,000원"}, {"amount": 20800000, "desc": "빔프로젝트 4대 * 5,200,000원 "}, {"amount": 12276000, "desc": "스케치업  62카피(년단위)*198,000원"}, {"amount": 385000, "desc": "예비비 385,000원"}, {"amount": 1368000, "desc": "인체골격 모형 2대 * 684,000원 "}, {"amount": -713900, "desc": "전공역량 고도화를 위한 CKMC 비교과사업 (웹소설창작전공) 713,900원 이동"}, {"amount": 702000, "desc": "전동스크린 1대 * 702,000원"}], "id": "b67_l0", "fundType": "혁신사업"}], "id": "b67"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "재학생 대상 현장중심 수업강화를 위한 웹소설창작전공 캡스톤디자인 지원", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 9500000, "AID사업": 0, "기타": 0}, "total": 9500000, "details": [{"amount": 500000, "desc": "[예산조정] 사업비 증액"}, {"amount": 1500000, "desc": "전문가특강 300,000 *5회"}, {"amount": 7500000, "desc": "캡스톤디자인 시제품 제작 및 홍보 7,500,000원"}], "id": "b68_l0", "fundType": "혁신사업"}], "id": "b68"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "웹툰웹소설 상용 데이터 분석 시스템", "lineItems": [{"gwanCode": "4300", "gwan": "연구학생경비", "hangCode": "4320", "hang": "학생경비", "acctCode": "4325", "acctName": "학생지원비", "funds": {"등록금회계": 10000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 10000000, "details": [{"amount": 10000000, "desc": "분석 데이터베이스 시스템 사용료 1년 사용료 cocoda 서비스 구독료 10,000,000원\n"}], "id": "b69_l0", "fundType": "등록금회계"}], "id": "b69"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "재학생 대상 현장중심 수업강화를 위한 웹툰만화콘텐츠전공 캡스톤디자인 지원", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 20000000, "AID사업": 0, "기타": 0}, "total": 20000000, "details": [{"amount": 17000000, "desc": "전시제작 및 홍보물품, 졸업연감제작 17,000,000원"}, {"amount": 3000000, "desc": "현장전문가특강 10회*30만원=3,000,000원"}], "id": "b70_l0", "fundType": "혁신사업"}], "id": "b70"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "재학생 대상 현장진출 역량 강화를 위한 시작품제작(인쇄비) 지원", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 10000000, "AID사업": 0, "기타": 0}, "total": 10000000, "details": [{"amount": 10000000, "desc": "웹툰 시작품 지원 : 6,000,000원\n웹소설 시작품 지원: 4,000,000원"}], "id": "b71_l0", "fundType": "혁신사업"}], "id": "b71"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "산학협력 생태계 구축을 위한 CKMC WAVE", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 8000000, "AID사업": 0, "기타": 0}, "total": 8000000, "details": [{"amount": 10000000, "desc": "CKMC 홈커밍데이(숙박비, 식비, 인건비, 재료비, 간식, 기념품비 등) 10,000,000원"}, {"amount": -2000000, "desc": "굿즈제작비 2,000,000원 등록금으로 이관, 추후 금액 변경될 수 있음 "}], "id": "b72_l0", "fundType": "혁신사업"}, {"gwanCode": "4300", "gwan": "연구학생경비", "hangCode": "4320", "hang": "학생경비", "acctCode": "4325", "acctName": "학생지원비", "funds": {"등록금회계": 2000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 2000000, "details": [{"amount": 2000000, "desc": "굿즈제작비"}], "id": "b72_l1", "fundType": "등록금회계"}], "id": "b72"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "[글로컬_만화] CKMC-글로벌 브릿지 구축사업", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": 70000000, "desc": "글로벌 브릿지 사업 70,000,000원"}, {"amount": -70000000, "desc": "전략사업으로 산학취업처로 이관"}], "id": "b73_l0", "fundType": "등록금회계"}], "id": "b73"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "재학생 진로탐색 및 산학협력 네트워크 구축을 위한 CKMC 크리에이티브 페어 개최", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 90000000, "AID사업": 0, "기타": 0}, "total": 90000000, "details": [{"amount": 25000000, "desc": "대관료 25,000,000"}, {"amount": 15000000, "desc": "졸업예정자 대상 진로탐색을 위한 졸업작품전시회 지원(리라이트페어)"}, {"amount": 35000000, "desc": "졸업예정자 대상 진로탐색을 위한 졸업작품전시회 지원(크리에이티브 페어)"}, {"amount": 15000000, "desc": "홍보비 15,000,000"}], "id": "b74_l0", "fundType": "혁신사업"}], "id": "b74"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "홍보 및 성과확산을 위한 CKMC 팝업전시회 운영", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": -20500000, "desc": "[예산조정] 사업비 감액"}, {"amount": -4500000, "desc": "[예산조정] 사업비 감액"}, {"amount": 12000000, "desc": "전시회 대관료 12,000,000원"}, {"amount": 10000000, "desc": "제작비(부스 설치,콘텐츠제작지원) 10,000,000"}, {"amount": 3000000, "desc": "홍보비 3,000,000원"}], "id": "b75_l0", "fundType": "등록금회계"}], "id": "b75"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "재학생 현장진출 지원 및 전공역량 고도화를 위한 CKMC 공모전 운영", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": -7000000, "desc": "[사업분리] 잔액"}, {"amount": -10000000, "desc": "[사업분리] 청강문학상 이동"}, {"amount": -4000000, "desc": "[사업분리] 캐릭터공모전 이동"}, {"amount": 15000000, "desc": "공모전 상금, 운영비  15,000,000"}, {"amount": 3000000, "desc": "제작비(출판 등) 3,000,000"}, {"amount": 3000000, "desc": "홍보비 등 3,000,000"}], "id": "b76_l0", "fundType": "등록금회계"}], "id": "b76"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "홍보 및 성과확산을 위한 CKMC 홍보콘텐츠제작", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4230", "hang": "운영비", "acctCode": "4235", "acctName": "홍보비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": -10000000, "desc": "[사업분리, 예산조정] CKMC 홍보콘텐츠제작(웹소설)"}, {"amount": 0, "desc": "[사업분리, 예산조정] CKMC 홍보콘텐츠제작(웹툰&만캐일)"}, {"amount": 7000000, "desc": "카드뉴스 및 숏폼 콘텐츠 제작 배포비 7,000,000"}, {"amount": 3000000, "desc": "학생기자단 운영 및 취재비 3,000,000"}], "id": "b77_l0", "fundType": "등록금회계"}], "id": "b77"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "전공역량 심화를 위한 CKMC 외부전문가 초청 특강", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 5000000, "AID사업": 0, "기타": 0}, "total": 5000000, "details": [{"amount": 2400000, "desc": "강사료 300,000원X8회=2,400,000"}, {"amount": 2000000, "desc": "인문학 특강비 2,000,000"}, {"amount": 600000, "desc": "홍보비, 운영비 등 600,000"}], "id": "b78_l0", "fundType": "혁신사업"}], "id": "b78"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "홍보 및 성과확산을 위한 CKMC 출판기획 및 지원", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": 10000000, "desc": "CKMC 무크지 제작 및 발간 10,000,000"}, {"amount": 5000000, "desc": "[사업분리, 예산조정] 사업비 증액"}, {"amount": -10000000, "desc": "[사업분리] 앤솔로지 사업으로 이동"}, {"amount": -15000000, "desc": "[예산조정] 교비로 변경"}, {"amount": -10000000, "desc": "[예산조정] 졸업생 멘토링 사업(웹소설)"}, {"amount": 3000000, "desc": "운영비 3,000,000"}, {"amount": 5000000, "desc": "위크북 제작비 5,000,000"}, {"amount": 5000000, "desc": "창작작품 인쇄비 지원 5,000,000"}, {"amount": 5000000, "desc": "학생작품 출판지원 5,000,000"}, {"amount": 2000000, "desc": "홍보비 2,000,000"}], "id": "b79_l0", "fundType": "등록금회계"}, {"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4230", "hang": "운영비", "acctCode": "4235", "acctName": "홍보비", "funds": {"등록금회계": 15000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 15000000, "details": [{"amount": 15000000, "desc": "CKMC 무크지 제작 및 발간 15,000,000"}], "id": "b79_l1", "fundType": "등록금회계"}], "id": "b79"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "전공역량 고도화를 위한 CKMC 장르캠프", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": -18000000, "desc": "[예산조정] RISE 사업비로 운영"}, {"amount": 4000000, "desc": "영상제작 4,000,000"}, {"amount": 3000000, "desc": "재학생 대상 장르 집중 강화 프로그램 3,000,000"}, {"amount": 3000000, "desc": "청강 판타지무협 TRPG 캠프 3,000,000"}, {"amount": 3000000, "desc": "홍보비 3,000,000"}, {"amount": 5000000, "desc": "환상문학 연구 워크숍 5,000,000"}], "id": "b80_l0", "fundType": "등록금회계"}], "id": "b80"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "신입생 대상 전공 적응력 향상을 위한 웹툰, 웹소설 오픈 클래스", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4230", "hang": "운영비", "acctCode": "4235", "acctName": "홍보비", "funds": {"등록금회계": 6000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 6000000, "details": [{"amount": 1000000, "desc": "[예산조정] 기념품제작 1,000,000원 증액"}, {"amount": 2000000, "desc": "기념품제작 2,000,000원"}, {"amount": 3000000, "desc": "오픈클래스 기획 , 홍보, 운영비 3,000,000"}], "id": "b81_l0", "fundType": "등록금회계"}], "id": "b81"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "스쿨중장기발전계획 수립을 위한 CKMC 콜로키움", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 3000000, "AID사업": 0, "기타": 0}, "total": 3000000, "details": [{"amount": 120000, "desc": "운영비 문구류등 운영 소모품 120,000원"}, {"amount": 1200000, "desc": "전문가특강: 300,000원*4명 = 1,200,000원"}, {"amount": 1680000, "desc": "회의비\n하계 워크숍: 28명*15,000원*3회 =1,260,000원\n동계 워크숍: 28명*15,000원*1회 = 420,000원"}], "id": "b82_l0", "fundType": "혁신사업"}], "id": "b82"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "전공역량 고도화를 위한 CKMC 마스터클래스", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": -4157250, "desc": "<전공역량 강화를 위한 느린만화> 신설을 위한 실링 맞춤용 임시감액"}, {"amount": -4142750, "desc": "[사업분리] CKMC 비교과사업 (만화캐릭터일러스트레이션전공)"}, {"amount": -2400000, "desc": "[사업분리] CKMC 비교과사업 (웹소설창작전공)"}, {"amount": -300000, "desc": "[사업분리] CKMC 비교과사업 (웹툰만화콘텐츠전공)"}, {"amount": 6000000, "desc": "운영비(대관료,강사료 등) 6,000,000원"}, {"amount": 3500000, "desc": "제작비(영상) 3,500,000원"}, {"amount": 1500000, "desc": "홍보비 1,500,000원"}, {"amount": -200000, "desc": "[사업분리] CKMC 비교과사업 (웹툰만화콘텐츠전공)으로 이동"}, {"amount": 200000, "desc": "참가자 숙박비 10,000원 * 20명"}], "id": "b83_l0", "fundType": "등록금회계"}], "id": "b83"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "창작환경 개선을 위한 창의교육공간 구축 및 운영", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 1500000, "AID사업": 0, "기타": 0}, "total": 1500000, "details": [{"amount": 1500000, "desc": "현재3관 409호 빔프로젝트 신규 설치에 따른 구조 변경"}], "id": "b84_l0", "fundType": "혁신사업"}], "id": "b84"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "홍보 및 성과확산을 위한 CKMC 아카이빙", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4230", "hang": "운영비", "acctCode": "4235", "acctName": "홍보비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": -3000000, "desc": "[예산 조정] 사업비 감액"}, {"amount": 2400000, "desc": "백서 제작비 2,400,000원"}, {"amount": 600000, "desc": "플렛폼 사용료, 보안세팅, 도메인 사용료 600,000원"}], "id": "b85_l0", "fundType": "등록금회계"}], "id": "b85"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "재학생 소통 및 적응력 향상을 위한 CKMC DAY", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 6500000, "AID사업": 0, "기타": 0}, "total": 6500000, "details": [{"amount": 600000, "desc": "사인물,드로잉판넬 등 설치물 제작 600,000\n"}, {"amount": 500000, "desc": "운영비\n"}, {"amount": 900000, "desc": "특강 및 라이브드로잉 강사료 300,000X3인\n"}, {"amount": 3000000, "desc": "프로그램 운영 재료구입 150,000X20개\n"}, {"amount": 1500000, "desc": "현수막, 배너, 포스터 등 홍보비 1,500,000\n"}], "id": "b86_l0", "fundType": "혁신사업"}], "id": "b86"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "재학생 소통을 위한 스쿨 캐릭터존 운영", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4230", "hang": "운영비", "acctCode": "4239", "acctName": "기타운영비", "funds": {"등록금회계": 2000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 2000000, "details": [{"amount": 2000000, "desc": "스쿨 캐릭터존 운영  2,000,000원"}], "id": "b87_l0", "fundType": "등록금회계"}], "id": "b87"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "재학생 진로탐색 및 산학협력 네트워크 구축을 위한 CK 스토리마켓", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 8000000, "AID사업": 0, "기타": 0}, "total": 8000000, "details": [{"amount": 7000000, "desc": "학생콘텐츠숏폼제작비 250,000*28명"}, {"amount": 1000000, "desc": "홍보비 1,000,000"}], "id": "b88_l0", "fundType": "혁신사업"}, {"gwanCode": "4300", "gwan": "연구학생경비", "hangCode": "4320", "hang": "학생경비", "acctCode": "4325", "acctName": "학생지원비", "funds": {"등록금회계": 4000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 4000000, "details": [{"amount": 1000000, "desc": "굿즈제작 1,000,000"}, {"amount": 3000000, "desc": "케이터링 20,000원*150명"}], "id": "b88_l1", "fundType": "등록금회계"}], "id": "b88"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "CKMC 학생자치활동 지원", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": -10000000, "desc": "[예산조정]-10,000,000"}, {"amount": 10000000, "desc": "운영비(시제품제작지원) 10,000,000"}], "id": "b89_l0", "fundType": "등록금회계"}], "id": "b89"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "CKMC 만화플랫폼구축", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": -12000000, "desc": "[예산조정] 사업비 감액"}, {"amount": -2800000, "desc": "[예산조정] 사업비 감액"}, {"amount": -4200000, "desc": "스쿨 교직원 AI 구독 지원으로 전용"}, {"amount": 15000000, "desc": "운영비(IP제작지원) 15,000,000"}, {"amount": 2000000, "desc": "제작비(플랫폼) 2,000,000"}, {"amount": 2000000, "desc": "홍보비 2,000,000"}], "id": "b90_l0", "fundType": "등록금회계"}], "id": "b90"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "스쿨 교직원 AI 구독 지원", "lineItems": [{"gwanCode": "4300", "gwan": "연구학생경비", "hangCode": "4320", "hang": "학생경비", "acctCode": "4323", "acctName": "실험실습비", "funds": {"등록금회계": 4200000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 4200000, "details": [{"amount": 4200000, "desc": "스쿨 교직원 AI 구독 지원"}], "id": "b91_l0", "fundType": "등록금회계"}], "id": "b91"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "전공역량 강화를 위한 느린만화", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 1650000, "AID사업": 0, "기타": 0}, "total": 1650000, "details": [{"amount": 1500000, "desc": "간식비: 5,000원*150명*2회=1,500,000원"}, {"amount": -300000, "desc": "굿즈 발송비 등록금으로 이관"}, {"amount": 300000, "desc": "우편비: 굿즈 발송비 5,000원 X 60명 = 300,000원"}, {"amount": 150000, "desc": "인쇄비: X배너 50,000원*3개=150,000원"}], "id": "b92_l0", "fundType": "혁신사업"}, {"gwanCode": "4300", "gwan": "연구학생경비", "hangCode": "4320", "hang": "학생경비", "acctCode": "4325", "acctName": "학생지원비", "funds": {"등록금회계": 2907250, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 2907250, "details": [{"amount": 400000, "desc": "[예산조정] 굿즈 추가 제작 "}, {"amount": 2207250, "desc": "■ 굿즈 제작비\n- (고민해결책) 300권(150명 X 2회) = 1,207,250원 + 배송비\n- (키링) 400개(키링 포함) = 1,000,000원"}, {"amount": 300000, "desc": "우편비: 굿즈 발송비 5,000원 X 60명 = 300,000원"}], "id": "b92_l1", "fundType": "등록금회계"}], "id": "b92"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "전공역량 고도화를 위한 CKMC 비교과사업 (웹툰만화콘텐츠전공)", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 300000, "AID사업": 0, "기타": 0}, "total": 300000, "details": [{"amount": 300000, "desc": "CKMC 비교과사업 (웹툰만화콘텐츠전공) 운영"}], "id": "b93_l0", "fundType": "혁신사업"}, {"gwanCode": "4300", "gwan": "연구학생경비", "hangCode": "4320", "hang": "학생경비", "acctCode": "4325", "acctName": "학생지원비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": -200000, "desc": "[예산조정] -200,000"}, {"amount": 200000, "desc": "참가자 숙박비 10,000원 * 20명"}], "id": "b93_l1", "fundType": "등록금회계"}], "id": "b93"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "재학생 현장진출 지원 및 전공역량 고도화를 위한 청강문학상 운영", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 10000000, "AID사업": 0, "기타": 0}, "total": 10000000, "details": [{"amount": 10000000, "desc": "청강문학상 운영"}], "id": "b94_l0", "fundType": "혁신사업"}], "id": "b94"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "재학생 현장진출 지원 및 전공역량 고도화를 위한 캐릭터공모전 운영", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 4000000, "AID사업": 0, "기타": 0}, "total": 4000000, "details": [{"amount": 4000000, "desc": "캐릭터공모전 운영"}], "id": "b95_l0", "fundType": "혁신사업"}], "id": "b95"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "전공역량 고도화를 위한 CKMC 만화  앤솔로지 사업 운영", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 8800000, "AID사업": 0, "기타": 0}, "total": 8800000, "details": [{"amount": -1200000, "desc": "[예산조정]교비 굿즈 제작 -1,200,000원"}, {"amount": 10000000, "desc": "앤솔로지 사업 운영\n인쇄비: 앤솔로지 책자: 500권*10,000원=5,000,0000원\n인건비:\n원교료 10,000(1P)*280P=2,8000,0000원\n편집 및 디자인비: 2,200,000원"}], "id": "b96_l0", "fundType": "혁신사업"}, {"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4230", "hang": "운영비", "acctCode": "4235", "acctName": "홍보비", "funds": {"등록금회계": 1200000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 1200000, "details": [{"amount": 1200000, "desc": "굿즈 제작 1,200,000원"}], "id": "b96_l1", "fundType": "등록금회계"}], "id": "b96"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "전공역량 고도화를 위한 CKMC 비교과사업 (만화캐릭터일러스트레이션전공)", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 4142750, "AID사업": 0, "기타": 0}, "total": 4142750, "details": [{"amount": 4142750, "desc": "CKMC 비교과사업 (만화캐릭터일러스트레이션전공) 운영"}], "id": "b97_l0", "fundType": "혁신사업"}], "id": "b97"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "전공역량 고도화를 위한 CKMC 비교과사업 (웹소설창작전공)", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 3113900, "AID사업": 0, "기타": 0}, "total": 3113900, "details": [{"amount": 2400000, "desc": "CKMC 비교과사업 (웹소설창작전공) 운영"}, {"amount": 713900, "desc": "기자재 예산에서 이동 713,900원"}], "id": "b98_l0", "fundType": "혁신사업"}], "id": "b98"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "학생 성과확산을 위한 CKMC 만화캐릭터일러스트페어 운영", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 59300000, "AID사업": 0, "기타": 0}, "total": 59300000, "details": [{"amount": 53000000, "desc": "CKMC 만화캐릭터일러스트페어 운영"}, {"amount": 2800000, "desc": "[예산조정] 2,800,000원"}, {"amount": 4500000, "desc": "[예산조정] 4,500,000원"}, {"amount": -1000000, "desc": "운영성경비 감액"}], "id": "b99_l0", "fundType": "혁신사업"}], "id": "b99"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "졸업생 멘토링 사업(웹툰)", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 12000000, "AID사업": 0, "기타": 0}, "total": 12000000, "details": [{"amount": 12000000, "desc": "졸업생 멘토링 사업 운영"}], "id": "b100_l0", "fundType": "혁신사업"}], "id": "b100"}, {"school": "만화콘텐츠스쿨", "dept": "만화콘텐츠스쿨행정", "name": "졸업생 멘토링 사업(웹소설)", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 10000000, "AID사업": 0, "기타": 0}, "total": 10000000, "details": [{"amount": 10000000, "desc": "졸업생 멘토링 사업 운영"}], "id": "b101_l0", "fundType": "혁신사업"}], "id": "b101"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "혁신사업)재학생 대상 학습 인프라 강화를 위한 교육공간 공사 지원", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 30000000, "AID사업": 0, "기타": 0}, "total": 30000000, "details": [{"amount": 30000000, "desc": "스쿨 내 노후 실습실 환경개선 또는 유휴 공간 개선하고자 함"}], "id": "b102_l0", "fundType": "혁신사업"}], "id": "b102"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "스쿨운영비", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4230", "hang": "운영비", "acctCode": "4239", "acctName": "기타운영비", "funds": {"등록금회계": 8000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 8000000, "details": [{"amount": 8000000, "desc": "4,000,000원*2회"}], "id": "b103_l0", "fundType": "등록금회계"}], "id": "b103"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "혁신사업)재학생 대상 학습 인프라 강화를 위한 실험실습 기자재 구매 지원", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 261068000, "AID사업": 0, "기타": 0}, "total": 261068000, "details": [{"amount": 37828000, "desc": "1차 추가경정 조정금액 반영"}, {"amount": 196110000, "desc": "[PC 및 집기 구입비]\n현재2관 211호 or 212호 노후 실습실 PC교체 및 집기 구입비\n -노후PC 교체 35대 * 3,300,000 = 115,500,000원\n- 테이블 및 의자 등 : 80,610,000원"}, {"amount": 34410000, "desc": "[소프트웨어 구입비]\n1. 26년 유니티, 스파인, Cubase 소프트웨어 구입 금액이 인상 될 것으로 예상되어 31,910,000원 보다 250만원 상향하였음.\n2. spine 2D 소프트웨어 소모품구입으로 진행함\n"}, {"amount": -7280000, "desc": "스쿨 교직원 AI 구독 지원 전용"}], "id": "b104_l0", "fundType": "혁신사업"}], "id": "b104"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "혁신사업)재학생 대상 학습 인프라 강화 위한 실험실습 소모품 지원", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422040", "acctName": "실험실습비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 25590000, "AID사업": 0, "기타": 0}, "total": 25590000, "details": [{"amount": 7590000, "desc": "spine 2D 소프트웨어 60user 1년 구독으로 7,590,000원 구매함"}, {"amount": 3500000, "desc": "공용물품"}, {"amount": 8500000, "desc": "기초드로잉, 제스쳐드로잉기초"}, {"amount": 6000000, "desc": "인체조소 전신"}], "id": "b105_l0", "fundType": "혁신사업"}], "id": "b105"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "강사 및 겸임교원 강의료", "lineItems": [{"gwanCode": "4100", "gwan": "보수", "hangCode": "4110", "hang": "교원보수", "acctCode": "4115", "acctName": "시간강의료", "funds": {"등록금회계": 257433000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 257433000, "details": [{"amount": 84711000, "desc": "강사비1학기강의료(주당시수 151시간)*(강사료 33000원)*17주"}, {"amount": 79662000, "desc": "강사비2학기(주당시수 142시간)*(강사료 33000원)*17주"}, {"amount": 47520000, "desc": "겸임교수강의료 1학기(주당시수 96시간)*(강사료 33000원)*15주"}, {"amount": 45540000, "desc": "겸임교수강의료 2학기(주당시수 92시간)*(강사료 33000원)*15주"}], "id": "b106_l0", "fundType": "등록금회계"}], "id": "b106"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "신입생 대상 전략적 입시홍보체계구축을 위한 스쿨홍보사업 ", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4230", "hang": "운영비", "acctCode": "4235", "acctName": "홍보비", "funds": {"등록금회계": 27000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 27000000, "details": [{"amount": 10000000, "desc": "2027학년도 입시홍보를 위한 굿즈 제작"}, {"amount": 17000000, "desc": "[청강게임대전] 상장 및 부상 8,000,000 + 온오프라인홍보 3,000,000 + 인건비(외부심사비 포함) 1,000,000 + 운영비 600,000"}], "id": "b107_l0", "fundType": "등록금회계"}], "id": "b107"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "전임교원 초과강의료", "lineItems": [{"gwanCode": "4100", "gwan": "보수", "hangCode": "4110", "hang": "교원보수", "acctCode": "4113", "acctName": "교원제수당", "funds": {"등록금회계": 26000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 26000000, "details": [{"amount": 11000000, "desc": "전임교원초과강의료1학기(월별 2,750,000원*4개월)"}, {"amount": 15000000, "desc": "전임교원초과강의료1학기(월별 3,750,000원*4개월)"}], "id": "b108_l0", "fundType": "등록금회계"}], "id": "b108"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "혁신사업) 게임콘텐츠스쿨 교육혁신을 위한 콜로키움", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4230", "hang": "운영비", "acctCode": "4239", "acctName": "기타운영비", "funds": {"등록금회계": 4320000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 4320000, "details": [{"amount": 4970000, "desc": "[스쿨 교수워크숍]\n-숙박비: 22명 * 60,000원 = 1,320,000원\n-식비: 22명 * 5식 * 15,000원  = 1,650,000원\n-교통비: 버스대절 2,000,000원"}, {"amount": 3000000, "desc": "게임콘텐츠스쿨 전략보고서 작성: 회의비 500,000원, 전문가활용비 2,500,000원"}, {"amount": -4970000, "desc": "스쿨 교수워크숍은 HUSS 사업으로 대체함"}, {"amount": 1320000, "desc": "콜로키움: 22명 * 15,000원 * 4회 "}], "id": "b109_l0", "fundType": "등록금회계"}], "id": "b109"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "행정소모품", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4220", "hang": "일반관리비", "acctCode": "4223", "acctName": "소모품비", "funds": {"등록금회계": 2560000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 2560000, "details": [{"amount": 1020000, "desc": "복사기임대료 85,000*12"}, {"amount": 1540000, "desc": "행정소모품구입비 130,000원*12개월"}], "id": "b110_l0", "fundType": "등록금회계"}], "id": "b110"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "신입생 대상 전략적 입시홍보체계구축을 위한 오픈스쿨 지원", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4230", "hang": "운영비", "acctCode": "4235", "acctName": "홍보비", "funds": {"등록금회계": 11250000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 11250000, "details": [{"amount": 11250000, "desc": "2027학년도 입시설명회 실시: 장소대여, 도우미 인건비, 운영비 등 사용함"}, {"amount": 0, "desc": "오픈스쿨 실시(입학처 예산활용)"}], "id": "b111_l0", "fundType": "등록금회계"}], "id": "b111"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "혁신사업)재학생 대상 디자인 역량 강화 위한 모델드로잉 지원", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422040", "acctName": "실험실습비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 16632000, "AID사업": 0, "기타": 0}, "total": 16632000, "details": [{"amount": 7920000, "desc": "1학기 66,000원*60회*2시간"}, {"amount": 8712000, "desc": "2학기 66,000원*66회*2시간"}], "id": "b112_l0", "fundType": "혁신사업"}], "id": "b112"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "혁신사업)재학생,신입생,외부관계자 등을 대상으로 전공역량 강화를 위한_청강게임컨퍼런스(CGC) 실시 지원", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": -1800000, "desc": "글로벌 사업으로 대체함"}, {"amount": 1800000, "desc": "특강비 300,000*6명"}], "id": "b113_l0", "fundType": "등록금회계"}], "id": "b113"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "혁신사업)재학생 대상 취,창업 역량 강화를 위한 청강게임크로니클 운영 지원", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 87000000, "AID사업": 0, "기타": 0}, "total": 87000000, "details": [{"amount": 6000000, "desc": "1. 영상제작(현장스케치, 클로니클 현장 촬영과 인터뷰 등 졸업작품전시회 영상) 6,000,000원"}, {"amount": 3000000, "desc": "10. 회의비(사업 참여교수, 행정실 직원, 졸업준비위원 재학생, 산업체 인사 등): 3,000,000원"}, {"amount": 22000000, "desc": "2. 행사장 부스 설치 (블록시스템) 22,000,000원"}, {"amount": 18000000, "desc": "3. 행사장 전기공사 18,000,000원"}, {"amount": 12000000, "desc": "4. 출력물 및 현수막, 포스터 등 제작 12,000,000원"}, {"amount": 4400000, "desc": "5. 크로니클 홈페이지 유지보수 4,400,000원"}, {"amount": 2000000, "desc": "6. 시연기자재 운송 2회(사전, 철수) 2,000,000원"}, {"amount": 6000000, "desc": "7. 참여학생 버스 운행(총 10회) 6,000,000원"}, {"amount": 3600000, "desc": "8. 행사 소모품(PC포장재, 헤드셋, 비품 등) 3,600,000원"}, {"amount": 10000000, "desc": "9. 장소 대관료 10,000,000원 => 26년도 크로니클 장소 네오위즈에서 진행할 경우는 예산 미집행 함."}], "id": "b114_l0", "fundType": "혁신사업"}, {"gwanCode": "4300", "gwan": "연구학생경비", "hangCode": "4320", "hang": "학생경비", "acctCode": "4325", "acctName": "학생지원비", "funds": {"등록금회계": 5000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 5000000, "details": [{"amount": 5000000, "desc": "홍보용 굿즈 제작 5,000,000원"}], "id": "b114_l1", "fundType": "등록금회계"}], "id": "b114"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "혁신사업)재학생 대상 전공융합인재 양성을 위한 무한도전 프로젝트 지원", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": -4200000, "desc": "AID 사업으로 대체함"}, {"amount": 3600000, "desc": "시상금 3,600,000원  (1등 100 1팀, 2등 70 2팀, 3등 40 2팀)"}, {"amount": 400000, "desc": "인건비 400,000원 (학생 작품 설치 및 시연 도우미)"}, {"amount": 200000, "desc": "회의비 200,000원"}], "id": "b115_l0", "fundType": "등록금회계"}], "id": "b115"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "신입생 대상 전략적 입시홍보체계구축을 위한 입시진행(면접,실기) 비용 지원", "lineItems": [{"gwanCode": "4300", "gwan": "연구학생경비", "hangCode": "4330", "hang": "입시관리비", "acctCode": "4332", "acctName": "입시경비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": 0, "desc": "수시1차 면접,실기 운영예산"}, {"amount": 0, "desc": "수시2차 면접 운영예산"}], "id": "b116_l0", "fundType": "등록금회계"}], "id": "b116"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "혁신사업)현장중심교육 운영계획(캡스톤)", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 20900000, "AID사업": 0, "기타": 0}, "total": 20900000, "details": [{"amount": 2000000, "desc": "산업체 간담회 회의비 2,000,000원"}, {"amount": 2000000, "desc": "산업체 견학비용: 2,000,000원"}, {"amount": 11000000, "desc": "외부전시 대여기 자재지원: 11,000,000원"}, {"amount": 4000000, "desc": "작품 완료 보고서: 20팀 * 5부 * 40,000원"}, {"amount": 900000, "desc": "캡스톤디자인 산업체전문가 자문비: 3명 *300,000원"}, {"amount": 1000000, "desc": "플랫폼 등록비: 10개*100,000원"}], "id": "b117_l0", "fundType": "혁신사업"}, {"gwanCode": "4300", "gwan": "연구학생경비", "hangCode": "4320", "hang": "학생경비", "acctCode": "4325", "acctName": "학생지원비", "funds": {"등록금회계": 4000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 4000000, "details": [{"amount": 4000000, "desc": "Goods 시제품 제작비(4,000,000원)"}], "id": "b117_l1", "fundType": "등록금회계"}], "id": "b117"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "혁신사업)학습성과 확산 전시개선 사업", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 20430000, "AID사업": 0, "기타": 0}, "total": 20430000, "details": [{"amount": 2000000, "desc": "'만화캐릭터 일러스트페어' 부스 참가"}, {"amount": 7150000, "desc": "[성과 전시]\n1. 전시 콘텐츠 제작 인건비: 4명 * 500,000원 = 2,000,000원\n2. 회의비: 5명 * 2회 * 15,000원 = 150,000원\n3. 출력비 '지류, 현수막, 배너, 메이커스 등' 인쇄: 7,000,000원"}, {"amount": 11280000, "desc": "[학습성과 콘텐츠 제작]\n1. 버튜버 리소스 제작 인건비: 5명 * 200,000원 * 5개월 = 5,000,000원\n2. 과제전 영상 콘텐츠 제작 인건비: 5명 * 500,000원 = 2,500,000원\n3. 회의비 13명 * 4회 * 15,000원 = 780,000원\n4. 포토존 및 성과확산 부스 제작 3,000,000원"}], "id": "b118_l0", "fundType": "혁신사업"}], "id": "b118"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "[글로컬]게임콘텐츠스쿨 글로컬 사업", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": 1800000, "desc": "글로벌 게임쇼 전시 ( 전시회 티켓 4인 * 200,000원 = 800,000원/회의비 1,000,000원/항공료, 숙박비 등은 학교 기준 준용(산단 비용 활용))"}, {"amount": 20000000, "desc": "글로벌 게임컨퍼런스 참여 ( 행사 참여 비용(티켓, 부스 등) 10,000,000원/자료 번역비(컨퍼런스 자료, 홍보 자료 등) 5,000,000원/통역비 5,000,000원/항공료, 숙박비 등은 학교 기준 준용(산단 비용 활용)) "}, {"amount": 6000000, "desc": "글로벌 시범교육 콘텐츠 제작 (연구비 2명 * 12편(25분) * 250,000원 = 6,000,000원) "}, {"amount": 32200000, "desc": "글로벌 홍보 콘텐츠 구축 (학생 인건비 2명 * 6개월 * 300,000 = 3,600,000/유튜브 채널 콘텐츠 글로벌 버전 제작 3편 * 4,000,000 = 12,000,000/우수작품 로컬라이제이션 4편 * 4,000,000 = 16,000,000/ 회의비 5명 * 8회 * 15,000원 = 600,000원)"}, {"amount": -60000000, "desc": "산학취업처 전략사업으로 전액 이관"}], "id": "b119_l0", "fundType": "등록금회계"}], "id": "b119"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "혁신사업)재학생을 위한 전공의 날 행사", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "423000", "hang": "기타지원금사업비", "acctCode": "423010", "acctName": "기타지원금사업비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 9100000, "AID사업": 0, "기타": 0}, "total": 9100000, "details": [{"amount": 3500000, "desc": "[신입생환영회]\n1. 식비: 300명 * 6,500원 = 2,000,000원\n2. 다과비: 300명 * 5,000원 = 1,500,000"}, {"amount": 5600000, "desc": "[전공의 날]\n1. 다과비: 500명 * 5,000원 = 2,500,000원\n2. 회의비: 25명 *2회 * 15,000원 = 750,000원\n3. 졸업생 특강: 3명 * 300,000원 = 900,000원\n4. 우수게임 콘텐츠 시상금 1,200,000원\n5. 기타 운영비 250,000원 "}], "id": "b120_l0", "fundType": "혁신사업"}], "id": "b120"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "청강문화산업대학교 콘텐츠 실기대전", "lineItems": [{"gwanCode": "4300", "gwan": "연구학생경비", "hangCode": "4320", "hang": "학생경비", "acctCode": "4325", "acctName": "학생지원비", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": 75000000, "desc": "2025년 수익금 활용) 현재 계획없음"}, {"amount": -75000000, "desc": "수익금 활용계획 확정에 따라, 지출계획 삭제"}], "id": "b121_l0", "fundType": "등록금회계"}], "id": "b121"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "스쿨교육 혁신을 위한 교강사 네트워킹", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 4000000, "AID사업": 0, "기타": 0}, "total": 4000000, "details": [{"amount": 3000000, "desc": "교강사 네트워킹\n-회의비 (전임 22명+ 강사 28명) * 15,000원 * 3회 = 2,250,000원\n-다과비 (전임 22명+ 강사 28명) * 5,000원 * 3회 = 750,000원"}, {"amount": 1000000, "desc": "교강사 워크숍 진행"}], "id": "b122_l0", "fundType": "혁신사업"}], "id": "b122"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "졸업생 비즈니스 네트워킹", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 7600000, "AID사업": 0, "기타": 0}, "total": 7600000, "details": [{"amount": 500000, "desc": "다과비: 50명 * 5,000원 * 2회"}, {"amount": 2000000, "desc": "멘토링비: 10명 * 100,000 * 2회"}, {"amount": 600000, "desc": "숙박비(아람관): 10명 * 30,000원 * 2회"}, {"amount": 1500000, "desc": "식비: 50명 * 15,000원 * 2회"}, {"amount": 3000000, "desc": "홍보비 3,000,000원"}], "id": "b123_l0", "fundType": "혁신사업"}], "id": "b123"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "AI 교육활용 지원", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 2000000, "AID사업": 0, "기타": 0}, "total": 2000000, "details": [{"amount": 1000000, "desc": "외부 전문가 특강 실시함"}, {"amount": 1000000, "desc": "회의비 1,000,000원"}], "id": "b124_l0", "fundType": "혁신사업"}], "id": "b124"}, {"school": "게임콘텐츠스쿨", "dept": "게임콘텐츠스쿨행정", "name": "스쿨 교직원 AI 구독 지원", "lineItems": [{"gwanCode": "4300", "gwan": "연구학생경비", "hangCode": "4320", "hang": "학생경비", "acctCode": "4323", "acctName": "실험실습비", "funds": {"등록금회계": 7280000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 7280000, "details": [{"amount": 7280000, "desc": "스쿨 교직원 AI 구독 지원"}], "id": "b125_l0", "fundType": "등록금회계"}], "id": "b125"}, {"school": "융합콘텐츠스쿨", "dept": "융합콘텐츠스쿨행정", "name": "실험실습소모품", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422040", "acctName": "실험실습비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 11000000, "AID사업": 0, "기타": 0}, "total": 11000000, "details": [{"amount": 2000000, "desc": "강의실 PC 관련 파손 키보드, 마우스, 각종 케이블 구입 2,000,000원"}, {"amount": 3000000, "desc": "기타 지류 등 소모품 3,000,000원"}, {"amount": 6000000, "desc": "인체드로잉 등 미술관련 소모품(이젤, 화판, 물감등) 3,000,000원*2학기"}], "id": "b126_l0", "fundType": "혁신사업"}], "id": "b126"}, {"school": "융합콘텐츠스쿨", "dept": "융합콘텐츠스쿨행정", "name": "행정소모품 구입", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4220", "hang": "일반관리비", "acctCode": "4223", "acctName": "소모품비", "funds": {"등록금회계": 6220000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 6220000, "details": [{"amount": 1200000, "desc": "MS 용량 업그레이드 1인당*120,000원*10명"}, {"amount": 1020000, "desc": "복사기 임대료 85,000원*12개월"}, {"amount": 4000000, "desc": "행정소모품 구입비 4,000,000원"}], "id": "b127_l0", "fundType": "등록금회계"}], "id": "b127"}, {"school": "융합콘텐츠스쿨", "dept": "융합콘텐츠스쿨행정", "name": "스쿨 운영비", "lineItems": [{"gwanCode": "4200", "gwan": "관리운영비", "hangCode": "4230", "hang": "운영비", "acctCode": "4239", "acctName": "기타운영비", "funds": {"등록금회계": 4000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 4000000, "details": [{"amount": -1000000, "desc": "스쿨 교직원 AI 구독 지원으로 전용"}, {"amount": 5000000, "desc": "스쿨운영비(업무활동비, 야근식대, 우편비,사업지원 등) 5,000,000원"}], "id": "b128_l0", "fundType": "등록금회계"}], "id": "b128"}, {"school": "융합콘텐츠스쿨", "dept": "융합콘텐츠스쿨행정", "name": "전임교원 초과강의료", "lineItems": [{"gwanCode": "4100", "gwan": "보수", "hangCode": "4110", "hang": "교원보수", "acctCode": "4113", "acctName": "교원제수당", "funds": {"등록금회계": 3000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 3000000, "details": [{"amount": 3000000, "desc": "전임교원 초과강의료(300시간 예상) 시간당 10,000원*300h"}], "id": "b129_l0", "fundType": "등록금회계"}], "id": "b129"}, {"school": "융합콘텐츠스쿨", "dept": "융합콘텐츠스쿨행정", "name": "융합콘텐츠 교육환경 안정 지원(실험실습기자재)", "lineItems": [{"gwanCode": "120000", "gwan": "비유동자산", "hangCode": "122000", "hang": "유형자산", "acctCode": "122040", "acctName": "기계기구", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 91841280, "AID사업": 0, "기타": 0}, "total": 91841280, "details": [{"amount": 7502000, "desc": "CLO 1년 구독 * 242,000원*31개"}, {"amount": 19800000, "desc": "Midjourney 1년 구독 * 19,800,000원"}, {"amount": 19057500, "desc": "NUKE 1년구독 * 907,500원*21개"}, {"amount": 10230000, "desc": "ZBrush 1년 구독 * 330,000원 * 31개"}, {"amount": 27945500, "desc": "기타실습기자재 구입 27,945,500원"}, {"amount": 8034000, "desc": "버추얼 유튜버 방송실 구축 8,034,000원"}, {"amount": -727720, "desc": "스쿨 예산조정 삭감"}], "id": "b130_l0", "fundType": "혁신사업"}], "id": "b130"}, {"school": "융합콘텐츠스쿨", "dept": "융합콘텐츠스쿨행정", "name": "융합콘텐츠 교육자료 지원", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 7000000, "AID사업": 0, "기타": 0}, "total": 7000000, "details": [{"amount": 7000000, "desc": "AI영상제작 서비스 구독 및 교육자료 서버관리 : 7,000,000원"}], "id": "b131_l0", "fundType": "혁신사업"}], "id": "b131"}, {"school": "융합콘텐츠스쿨", "dept": "융합콘텐츠스쿨행정", "name": "융합콘텐츠 컨퍼런스(CKCC)", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 3000000, "AID사업": 0, "기타": 0}, "total": 3000000, "details": [{"amount": 1000000, "desc": "운영 다과 준비 200명*5,000원*1회"}, {"amount": 2000000, "desc": "전시 재료비 및 작품 출력비 2,025,000원"}], "id": "b132_l0", "fundType": "혁신사업"}], "id": "b132"}, {"school": "융합콘텐츠스쿨", "dept": "융합콘텐츠스쿨행정", "name": "인체드로잉 수업지원(모델료)", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 11880000, "AID사업": 0, "기타": 0}, "total": 11880000, "details": [{"amount": 11880000, "desc": "모델료 시간당 66,000원*3시간*10주*3개반*2학기"}], "id": "b133_l0", "fundType": "혁신사업"}], "id": "b133"}, {"school": "융합콘텐츠스쿨", "dept": "융합콘텐츠스쿨행정", "name": "강사 및 겸임교원 강의료", "lineItems": [{"gwanCode": "4100", "gwan": "보수", "hangCode": "4110", "hang": "교원보수", "acctCode": "4115", "acctName": "시간강의료", "funds": {"등록금회계": 114642000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 114642000, "details": [{"amount": 114642000, "desc": "시간당 33,000원*9시간*17주*9명*2학기+33,000원*12시간*15주*2명*2학기"}], "id": "b134_l0", "fundType": "등록금회계"}], "id": "b134"}, {"school": "융합콘텐츠스쿨", "dept": "융합콘텐츠스쿨행정", "name": "융합콘텐츠 콜로키움", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 800000, "AID사업": 0, "기타": 0}, "total": 800000, "details": [{"amount": 200000, "desc": "다과비 5,000원*10명*4회"}, {"amount": 600000, "desc": "회의 식비 15,000원*10명*4회"}], "id": "b135_l0", "fundType": "혁신사업"}], "id": "b135"}, {"school": "융합콘텐츠스쿨", "dept": "융합콘텐츠스쿨행정", "name": "융합콘텐츠 캡스톤디자인 제작 지원", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 17000000, "AID사업": 0, "기타": 0}, "total": 17000000, "details": [{"amount": 16000000, "desc": "사운드(Effects, BG, 음악, 성우, 스튜디오 사용 등 등) 제작지원 : 16,000,000원"}, {"amount": 1000000, "desc": "전문가 제작 멘토링 시간당 100,000원*10시간"}], "id": "b136_l0", "fundType": "혁신사업"}], "id": "b136"}, {"school": "융합콘텐츠스쿨", "dept": "융합콘텐츠스쿨행정", "name": "융합콘텐츠 졸업작품 전시회 지원", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 35025000, "AID사업": 0, "기타": 0}, "total": 35025000, "details": [{"amount": 1000000, "desc": "다과비 200명*5,000원*1회"}, {"amount": -1000000, "desc": "다과비용 산정 취소"}, {"amount": 31000000, "desc": "전시장 대여 및 공간 구성, 운송"}, {"amount": 2000000, "desc": "출력물 출력비 배너, 현수막, 포스터 등"}, {"amount": 2025000, "desc": "현장 운영 소모품 구입 및 교통비 멀티탭, 에어캡, 헤드셋 등 구입 및 주차비 실비정산"}], "id": "b137_l0", "fundType": "혁신사업"}, {"gwanCode": "4300", "gwan": "연구학생경비", "hangCode": "4320", "hang": "학생경비", "acctCode": "4325", "acctName": "학생지원비", "funds": {"등록금회계": 3000000, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 3000000, "details": [{"amount": 3000000, "desc": "굿즈 제작 텀블러 블루투스 스피커 20,000원*50개+ 학생작품 탁상 캘린더 제작 15,000원*100개+텀블러(스쿨 로고각인) 제작 5,000원*100개"}], "id": "b137_l1", "fundType": "등록금회계"}], "id": "b137"}, {"school": "융합콘텐츠스쿨", "dept": "융합콘텐츠스쿨행정", "name": "차세대 콘텐츠 개발을 위한 융합콘텐츠 랩 운영 활성화(UNI-Lab)", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 2000000, "AID사업": 0, "기타": 0}, "total": 2000000, "details": [{"amount": 2000000, "desc": "모션캡쳐 배우 섭외 시간당 50,000원*40시간"}], "id": "b138_l0", "fundType": "혁신사업"}], "id": "b138"}, {"school": "융합콘텐츠스쿨", "dept": "융합콘텐츠스쿨행정", "name": "자기주도 학습 및 진로 설계를 위한 플랫폼 운영 사업(UNI- Platform)", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 10600000, "AID사업": 0, "기타": 0}, "total": 10600000, "details": [{"amount": 9900000, "desc": "복학예정자, 예비신입생 대상 방학중 특강 강사료 300,000원*33회"}, {"amount": 700000, "desc": "학생 간담회 시행 다과비 35명*5,000원*4회"}], "id": "b139_l0", "fundType": "혁신사업"}], "id": "b139"}, {"school": "융합콘텐츠스쿨", "dept": "융합콘텐츠스쿨행정", "name": "버추얼 캐릭터 제작 활성화", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": 8034000, "desc": "버추얼 캐릭터 PV 제작 용역비 8,034,000원 지원(팀별 차등)"}, {"amount": -8034000, "desc": "사업운영 취소(교육환경안정지원 사업으로 예산 이관)"}], "id": "b140_l0", "fundType": "등록금회계"}], "id": "b140"}, {"school": "융합콘텐츠스쿨", "dept": "융합콘텐츠스쿨행정", "name": "수업개선 교강사 컨퍼런스", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": 480000, "desc": "다과비 5,000원*24명*4회"}, {"amount": -480000, "desc": "다과비 취소-비예산 사업으로 변경"}, {"amount": 1440000, "desc": "식비 15,000원*24명*4회"}, {"amount": -1440000, "desc": "식비 취소-비예산 사업으로 변경"}], "id": "b141_l0", "fundType": "등록금회계"}], "id": "b141"}, {"school": "융합콘텐츠스쿨", "dept": "융합콘텐츠스쿨행정", "name": "교육환경 유지 보수", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422040", "acctName": "실험실습비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 0, "details": [{"amount": 10000000, "desc": "교육환경 유지 보수 10,000,000원"}, {"amount": -974720, "desc": "스쿨 교직원 AI 구독 지원"}, {"amount": -9025280, "desc": "스쿨 예산 조정 삭감(사업 운영 취소)"}], "id": "b142_l0", "fundType": "등록금회계"}], "id": "b142"}, {"school": "융합콘텐츠스쿨", "dept": "융합콘텐츠스쿨행정", "name": "아티스트 커뮤니티 서비스 구축", "lineItems": [{"gwanCode": "420000", "gwan": "지원금사업비", "hangCode": "422000", "hang": "교육운영비", "acctCode": "422050", "acctName": "기타교육운영비(지원금교육)", "funds": {"등록금회계": 0, "비등록금회계": 0, "혁신사업": 16000000, "AID사업": 0, "기타": 0}, "total": 16000000, "details": [{"amount": 0, "desc": "영상편집 인건비 200,000원*4회"}, {"amount": 0, "desc": "외부 프리랜서 인건비 1개월*1,000,000원*2개월"}, {"amount": 0, "desc": "전문가 특강 300,000원*4회"}, {"amount": 16000000, "desc": "커뮤니티 서비스 웹 구축 위탁비(UI 디자인, 기본 관리 기능 개발, 서버운영 등)"}, {"amount": 0, "desc": "커뮤니티 웹 구축 및 운영\n(서비스 기획구조 및 설계 1,000,000원+프론트엔드 개발 1,500,000원+백엔드 개발 1,500,000원+테스트안정화 300,000원+서버운영 인프라구축 700,000원)"}, {"amount": 0, "desc": "크리에이터 개인 상점 연계 시스템 구축\n(연계 구조 기획 2,000,000원+연계 기능 개발 2,700,000원+운영 적용 및 점검 300,000원)"}, {"amount": 0, "desc": "포트폴리오 자문비 1회*1시간당*100,000원*20회(시간)"}], "id": "b143_l0", "fundType": "혁신사업"}], "id": "b143"}, {"school": "융합콘텐츠스쿨", "dept": "융합콘텐츠스쿨행정", "name": "스쿨 교직원 AI 구독 지원", "lineItems": [{"gwanCode": "4300", "gwan": "연구학생경비", "hangCode": "4320", "hang": "학생경비", "acctCode": "4323", "acctName": "실험실습비", "funds": {"등록금회계": 1974720, "비등록금회계": 0, "혁신사업": 0, "AID사업": 0, "기타": 0}, "total": 1974720, "details": [{"amount": 1974720, "desc": "스쿨 교직원 AI 구독 지원"}], "id": "b144_l0", "fundType": "등록금회계"}], "id": "b144"}];
+</script>
+<script>
+// ===================== 상태 =====================
+let workingData = JSON.parse(JSON.stringify(RAW_DATA)); // 편집 대상 (원본은 RAW_DATA 유지)
+let selectedBizId = null;
+let currentTab = 'adjust';
+let uploadedFiles = []; // {name, json, importedAt}
+let ownerName = '';
+let newIdCounter = 1;
+let pendingAccountBizId = null;
+const APP_VERSION = 'v1.2';
+
+const SCHOOL_CEILINGS = {
+  '패션뷰티스타일스쿨': 268655000,
+  '공연예술스쿨': 404182000,
+  '애니메이션스쿨': 824809000,
+  '만화콘텐츠스쿨': 1027238000,
+  '게임콘텐츠스쿨': 853268000,
+  '융합콘텐츠스쿨': 344201000
+};
+
+const ACCOUNT_OPTIONS_BY_FUND = {
+  '등록금회계': ['교원제수당','기타시설관리비','기타운영비','소모품비','시간강의료','실험실습비','입시경비','학생지원비','홍보비'],
+  '혁신사업': ['기계기구','기타교육운영비(지원금교육)','기타지원금사업비','실험실습비(지원금교육)','인건비(지원금교육)']
+};
+
+// 원본 스냅샷(라인아이템id -> {total, details}) - diff 기준
+const ORIGINAL_MAP = {};
+RAW_DATA.forEach(b => {
+  b.lineItems.forEach(li => {
+    ORIGINAL_MAP[li.id] = {
+      total: li.details.reduce((s,d)=>s+(d.amount||0),0),
+      details: JSON.parse(JSON.stringify(li.details))
+    };
+  });
+});
+
+function fmt(n){
+  n = Math.round(n || 0);
+  return n.toLocaleString('ko-KR');
+}
+function fmtSigned(n){
+  n = Math.round(n || 0);
+  const sign = n > 0 ? '+' : (n < 0 ? '-' : '');
+  return sign + Math.abs(n).toLocaleString('ko-KR');
+}
+function currentTotal(li){
+  return li.details.reduce((s,d)=>s+(Number(d.amount)||0),0);
+}
+function isLineItemChanged(li){
+  const orig = ORIGINAL_MAP[li.id];
+  if(!orig) return false;
+  if(currentTotal(li) !== orig.total) return true;
+  if(li.details.length !== orig.details.length) return true;
+  for(let i=0;i<li.details.length;i++){
+    if((Number(li.details[i].amount)||0) !== (orig.details[i].amount||0)) return true;
+    if((li.details[i].desc||'') !== (orig.details[i].desc||'')) return true;
+  }
+  return false;
+}
+function isBizChanged(biz){
+  return biz.lineItems.some(isLineItemChanged);
+}
+function findBiz(id){ return workingData.find(b=>b.id===id); }
+
+// ===================== 탭 =====================
+function switchTab(tab){
+  currentTab = tab;
+  document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.getElementById('view-adjust').classList.toggle('active', tab==='adjust');
+  document.getElementById('view-consolidate').classList.toggle('active', tab==='consolidate');
+}
+
+// ===================== 요약 지표 =====================
+function renderSummary(){
+  const el = document.getElementById('summaryStrip');
+  if(currentTab !== 'adjust'){ el.innerHTML=''; return; }
+  const school = document.getElementById('schoolFilter').value;
+  const scoped = workingData.filter(b=>b.school===school);
+  const totalBiz = scoped.length;
+  let changedBiz = 0, before = 0, after = 0;
+  scoped.forEach(b=>{
+    let bizChanged = false;
+    b.lineItems.forEach(li=>{
+      before += ORIGINAL_MAP[li.id].total;
+      after += currentTotal(li);
+      if(isLineItemChanged(li)) bizChanged = true;
+    });
+    if(bizChanged) changedBiz++;
+  });
+  const diff = after - before;
+  const diffClass = diff > 0 ? 'increase' : (diff < 0 ? 'decrease' : '');
+  const ceiling = SCHOOL_CEILINGS[school];
+  let ceilingHtml = '';
+  if(ceiling != null){
+    const cdiff = after - ceiling;
+    const cdiffClass = cdiff > 0 ? 'increase' : (cdiff < 0 ? 'decrease' : 'gold');
+    const cdiffLabel = cdiff > 0 ? `${fmt(cdiff)}원 초과` : (cdiff < 0 ? `${fmt(-cdiff)}원 미편성` : '일치');
+    ceilingHtml = `
+      <div class="summary-item"><div class="label">스쿨실링 2차 조정 총액</div><div class="value">${fmt(ceiling)}원</div></div>
+      <div class="summary-item"><div class="label">실링 대비 과부족</div><div class="value ${cdiffClass}">${cdiffLabel}</div></div>
+    `;
+  }
+  el.innerHTML = `
+    <div class="summary-item"><div class="label">${escapeHtml(school)} 사업 수</div><div class="value">${totalBiz}</div></div>
+    <div class="summary-item"><div class="label">조정된 사업 수</div><div class="value ${changedBiz>0?'gold':''}">${changedBiz}</div></div>
+    <div class="summary-item"><div class="label">조정 전 합계</div><div class="value">${fmt(before)}원</div></div>
+    <div class="summary-item"><div class="label">조정 후 합계</div><div class="value">${fmt(after)}원</div></div>
+    <div class="summary-item"><div class="label">증감</div><div class="value ${diffClass}">${fmtSigned(diff)}원</div></div>
+    ${ceilingHtml}
+  `;
+}
+
+// ===================== 사이드바 =====================
+function initSchoolFilter(){
+  const schools = [...new Set(workingData.map(b=>b.school))].sort((a,b)=>a.localeCompare(b,'ko'));
+  const opts = schools.map(s=>`<option value="${s}">${s}</option>`).join('');
+  const sel = document.getElementById('schoolFilter');
+  sel.innerHTML = opts;
+  sel.value = schools[0];
+  const landingSel = document.getElementById('landingSchoolSelect');
+  if(landingSel){ landingSel.innerHTML = opts; landingSel.value = schools[0]; }
+}
+
+function startApp(){
+  ownerName = document.getElementById('landingOwnerInput').value.trim();
+  const school = document.getElementById('landingSchoolSelect').value;
+  document.getElementById('schoolFilter').value = school;
+  document.getElementById('landingScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'flex';
+  renderBizList();
+  renderSummary();
+  checkAutosave();
+}
+
+function renderBizList(){
+  const school = document.getElementById('schoolFilter').value;
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const list = document.getElementById('bizList');
+
+  let filtered = workingData.filter(b=>{
+    if(school && b.school !== school) return false;
+    if(q && !(b.name.toLowerCase().includes(q) || b.dept.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  const onlyChanged = document.getElementById('onlyChangedToggle').checked;
+  if(onlyChanged){ filtered = filtered.filter(isBizChanged); }
+  filtered.sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+
+  // 스쿨별 그룹
+  const groups = {};
+  filtered.forEach(b=>{ (groups[b.school] = groups[b.school] || []).push(b); });
+
+  let html = '';
+  Object.keys(groups).forEach(school=>{
+    html += `<div class="biz-group-label">${school} · ${groups[school].length}건</div>`;
+    groups[school].forEach(b=>{
+      const changed = isBizChanged(b);
+      const total = b.lineItems.reduce((s,li)=>s+currentTotal(li),0);
+      html += `
+        <div class="biz-item ${b.id===selectedBizId?'selected':''}" onclick="selectBiz('${b.id}')">
+          <div class="biz-name-row">
+            <span class="biz-name">${changed?'<span class="dot-changed"></span>':''}${escapeHtml(b.name)}</span>
+            <span class="biz-total">${fmt(total)}원</span>
+          </div>
+        </div>`;
+    });
+  });
+  if(filtered.length === 0){
+    html = '<div style="padding:24px 16px; color:var(--muted); font-size:13px;">검색 결과가 없습니다.</div>';
+  }
+  list.innerHTML = html;
+}
+
+function selectBiz(id){
+  selectedBizId = id;
+  renderBizList();
+  renderDetail();
+  const panel = document.getElementById('detailPanel');
+  if(panel) panel.scrollTop = 0;
+}
+
+// ===================== 상세 패널 =====================
+function renderDetail(){
+  const panel = document.getElementById('detailPanel');
+  const biz = findBiz(selectedBizId);
+  if(!biz){
+    panel.innerHTML = `<div class="empty-state"><h2>왼쪽에서 사업을 선택하세요</h2><div>사업명을 클릭하면 계정과목별 산출근거가 표시됩니다.</div></div>`;
+    return;
+  }
+  let html = `
+    <div class="detail-header" style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+      <div>
+        <div class="crumb">${escapeHtml(biz.school)}${biz.dept ? ' · ' + escapeHtml(biz.dept) : ''}</div>
+        <h2>${escapeHtml(biz.name)}</h2>
+      </div>
+      ${biz.id.startsWith('new_biz_') ? `<button class="btn btn-danger-ghost" onclick="deleteBiz('${biz.id}')">사업 삭제</button>` : ''}
+    </div>
+  `;
+  if(biz.mainContent || biz.background || biz.goal){
+    html += `
+      <div class="card" style="padding:16px 18px;">
+        <div style="display:grid; grid-template-columns:1fr; gap:10px; font-size:12.5px;">
+          <div><div class="modal-label">주요내용</div><div style="color:var(--ink-soft); white-space:pre-line;">${escapeHtml(biz.mainContent||'')}</div></div>
+          <div><div class="modal-label">사업수립배경</div><div style="color:var(--ink-soft); white-space:pre-line;">${escapeHtml(biz.background||'')}</div></div>
+          <div><div class="modal-label">사업수립목표</div><div style="color:var(--ink-soft); white-space:pre-line;">${escapeHtml(biz.goal||'')}</div></div>
+        </div>
+      </div>
+    `;
+  }
+  html += `<div style="margin-bottom:14px;"><button class="btn btn-ghost" onclick="openNewAccountModal('${biz.id}')">+ 계정과목 추가</button></div>`;
+  if(biz.lineItems.length === 0){
+    html += `<div class="empty-state" style="height:160px;"><div>등록된 계정과목이 없습니다. 위 버튼으로 추가하세요.</div></div>`;
+  }
+  biz.lineItems.forEach((li, liIdx)=>{
+    const orig = ORIGINAL_MAP[li.id];
+    const cur = currentTotal(li);
+    const changed = isLineItemChanged(li);
+    const diffClass = cur > orig.total ? 'increase' : (cur < orig.total ? 'decrease' : '');
+    const fundBadges = `<span class="fund-badge">${escapeHtml(li.fundType || '미지정')} ${fmt(cur)}</span>`;
+
+    html += `
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="acct-title">${escapeHtml(li.acctName)}</div>
+            <div class="acct-code">${escapeHtml(li.gwan)} &gt; ${escapeHtml(li.hang)} &gt; ${escapeHtml(li.acctCode)}</div>
+            <div class="fund-badges">${fundBadges}</div>
+          </div>
+          <div class="card-totals">
+            <div class="total-row">산출근거 합계</div>
+            <div class="total-figures">
+              ${changed ? `<span class="total-before strike">${fmt(orig.total)}</span><span class="total-arrow">&rarr;</span>` : ''}
+              <span class="total-after ${changed?diffClass:''}">${fmt(cur)}원</span>
+            </div>
+            ${changed ? `<button class="reset-btn" onclick="resetLineItem('${biz.id}','${li.id}')">원안으로 되돌리기</button>` : ''}
+            ${li.id.includes('_lnew') ? `<button class="reset-btn" style="color:var(--increase); display:block; margin-top:2px;" onclick="deleteAccount('${biz.id}','${li.id}')">계정과목 삭제</button>` : ''}
+          </div>
+        </div>
+        <table class="detail-table">
+          <thead>
+            <tr><th>산출내역</th><th style="width:150px;" class="num-col">금액</th><th style="width:40px;"></th></tr>
+          </thead>
+          <tbody>
+            ${li.details.map((d, dIdx)=>renderDetailRow(biz.id, li.id, d, dIdx, orig.details[dIdx])).join('')}
+          </tbody>
+        </table>
+        <div class="card-foot">
+          <button class="add-row-btn" onclick="addDetailRow('${biz.id}','${li.id}')">+ 산출내역 추가</button>
+        </div>
+      </div>
+    `;
+  });
+  panel.innerHTML = html;
+}
+
+function renderDetailRow(bizId, liId, d, idx, origD){
+  const amtChanged = origD ? (Number(d.amount)||0) !== (origD.amount||0) : true;
+  const descChanged = origD ? (d.desc||'') !== (origD.desc||'') : true;
+  const rowChanged = amtChanged || descChanged;
+  let origNote = '';
+  if(origD && rowChanged){
+    origNote = `<div class="row-original">원안: <span class="strike">${fmt(origD.amount)}원 · ${escapeHtml(origD.desc)}</span></div>`;
+  } else if(!origD){
+    origNote = `<div class="row-original" style="color:var(--gold);">신규 추가된 항목</div>`;
+  }
+  return `
+    <tr class="${rowChanged?'row-changed':''}">
+      <td>
+        <input type="text" class="desc-input" value="${escapeAttr(d.desc)}"
+          onchange="updateDetail('${bizId}','${liId}',${idx},'desc',this.value)">
+        ${origNote}
+      </td>
+      <td class="num-col">
+        <input type="text" inputmode="numeric" class="amount-input" value="${fmt(d.amount)}"
+          oninput="formatAmountInput(this)"
+          onchange="updateDetail('${bizId}','${liId}',${idx},'amount',this.value)">
+      </td>
+      <td><button class="icon-btn" title="행 삭제" onclick="removeDetailRow('${bizId}','${liId}',${idx})">&times;</button></td>
+    </tr>
+  `;
+}
+
+function parseAmount(value){
+  const digits = String(value).replace(/[^0-9-]/g,'');
+  return Number(digits) || 0;
+}
+function formatAmountInput(el){
+  const num = parseAmount(el.value);
+  el.value = num.toLocaleString('ko-KR');
+}
+
+function updateDetail(bizId, liId, idx, field, value){
+  const biz = findBiz(bizId);
+  const li = biz.lineItems.find(l=>l.id===liId);
+  if(field === 'amount'){
+    li.details[idx].amount = parseAmount(value);
+  } else {
+    li.details[idx].desc = value;
+  }
+  renderDetail();
+  renderBizList();
+  renderSummary();
+  autosave();
+}
+
+function addDetailRow(bizId, liId){
+  const biz = findBiz(bizId);
+  const li = biz.lineItems.find(l=>l.id===liId);
+  li.details.push({amount:0, desc:''});
+  renderDetail();
+  renderBizList();
+  renderSummary();
+  autosave();
+}
+
+function removeDetailRow(bizId, liId, idx){
+  const biz = findBiz(bizId);
+  const li = biz.lineItems.find(l=>l.id===liId);
+  li.details.splice(idx,1);
+  renderDetail();
+  renderBizList();
+  renderSummary();
+  autosave();
+}
+
+function resetLineItem(bizId, liId){
+  const biz = findBiz(bizId);
+  const li = biz.lineItems.find(l=>l.id===liId);
+  const orig = ORIGINAL_MAP[liId];
+  li.details = JSON.parse(JSON.stringify(orig.details));
+  renderDetail();
+  renderBizList();
+  renderSummary();
+  autosave();
+}
+
+// ===================== 확인 모달 =====================
+function showConfirm(message, buttons){
+  const modal = document.getElementById('confirmModal');
+  document.getElementById('confirmMessage').textContent = message;
+  const btnWrap = document.getElementById('confirmButtons');
+  btnWrap.innerHTML = '';
+  buttons.forEach(b=>{
+    const btn = document.createElement('button');
+    btn.textContent = b.label;
+    btn.className = b.primary ? 'btn btn-primary' : 'btn btn-ghost';
+    btn.onclick = ()=>{ modal.classList.remove('show'); if(b.onClick) b.onClick(); };
+    btnWrap.appendChild(btn);
+  });
+  modal.classList.add('show');
+}
+
+// ===================== 실링(최대금액) 검증 =====================
+function schoolAdjustedTotal(school){
+  let after = 0;
+  workingData.filter(b=>b.school===school).forEach(b=>{
+    b.lineItems.forEach(li=>{ after += currentTotal(li); });
+  });
+  return after;
+}
+
+function checkCeilingThenProceed(proceedFn){
+  const school = document.getElementById('schoolFilter').value;
+  const ceiling = SCHOOL_CEILINGS[school];
+  if(ceiling == null){ proceedFn(); return; }
+  const after = schoolAdjustedTotal(school);
+  const diff = after - ceiling;
+  if(diff === 0){
+    showConfirm('스쿨실링 2차 조정 변경 총액이 일치합니다.', [
+      {label:'확인', primary:true, onClick: proceedFn}
+    ]);
+  } else if(diff < 0){
+    showConfirm(`스쿨실링 2차조정 변경 총액 대비 ${fmt(-diff)}원 덜 입력하셨습니다. 이대로 예산조정을 마치시겠습니까?`, [
+      {label:'아니요', onClick: ()=>{}},
+      {label:'예', primary:true, onClick: proceedFn}
+    ]);
+  } else {
+    showConfirm(`스쿨실링 2차조정 변경 총액 대비 ${fmt(diff)}원 초과입력하셨습니다.`, [
+      {label:'확인', primary:true, onClick: ()=>{}}
+    ]);
+  }
+}
+
+// ===================== 삭제 (신규 사업/계정과목) =====================
+function deleteBiz(bizId){
+  showConfirm('이 신규 사업을 삭제하시겠습니까? 삭제된 내용은 복구할 수 없습니다.', [
+    {label:'취소', onClick:()=>{}},
+    {label:'삭제', primary:true, onClick:()=>{
+      workingData = workingData.filter(b=>b.id!==bizId);
+      if(selectedBizId === bizId) selectedBizId = null;
+      renderBizList(); renderDetail(); renderSummary(); autosave();
+      showToast('사업이 삭제되었습니다.');
+    }}
+  ]);
+}
+function deleteAccount(bizId, liId){
+  showConfirm('이 계정과목을 삭제하시겠습니까? 삭제된 내용은 복구할 수 없습니다.', [
+    {label:'취소', onClick:()=>{}},
+    {label:'삭제', primary:true, onClick:()=>{
+      const biz = findBiz(bizId);
+      if(biz) biz.lineItems = biz.lineItems.filter(l=>l.id!==liId);
+      delete ORIGINAL_MAP[liId];
+      renderDetail(); renderBizList(); renderSummary(); autosave();
+      showToast('계정과목이 삭제되었습니다.');
+    }}
+  ]);
+}
+
+// ===================== 임시저장 =====================
+const AUTOSAVE_KEY = 'budgetAppAutosave_v1';
+function autosave(){
+  try{
+    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({
+      ownerName, workingData, newIdCounter, savedAt: new Date().toISOString()
+    }));
+  }catch(e){}
+}
+function clearAutosave(){
+  try{ localStorage.removeItem(AUTOSAVE_KEY); }catch(e){}
+}
+function checkAutosave(){
+  let raw;
+  try{ raw = localStorage.getItem(AUTOSAVE_KEY); }catch(e){ raw = null; }
+  if(!raw) return;
+  let data;
+  try{ data = JSON.parse(raw); }catch(e){ return; }
+  if(!data || !Array.isArray(data.workingData)) return;
+  const when = data.savedAt ? new Date(data.savedAt).toLocaleString('ko-KR') : '';
+  showConfirm(`임시저장된 조정내역이 있습니다 (${when} 저장). 불러올까요?`, [
+    {label:'아니요', onClick: ()=>{ try{ localStorage.removeItem(AUTOSAVE_KEY); }catch(e){} }},
+    {label:'예', primary:true, onClick: ()=>{
+      workingData = data.workingData;
+      ownerName = data.ownerName || ownerName;
+      newIdCounter = data.newIdCounter || newIdCounter;
+      workingData.forEach(biz=>biz.lineItems.forEach(li=>{
+        if(!ORIGINAL_MAP[li.id]) ORIGINAL_MAP[li.id] = {total:0, details:[]};
+      }));
+      renderBizList(); renderDetail(); renderSummary();
+      showToast('임시저장 내역을 불러왔습니다.');
+    }}
+  ]);
+}
+
+// ===================== 신규 사업 추가 =====================
+function openNewBizModal(){
+  document.getElementById('newBizName').value = '';
+  document.getElementById('newBizContent').value = '';
+  document.getElementById('newBizBackground').value = '';
+  document.getElementById('newBizGoal').value = '';
+  document.getElementById('newBizModal').classList.add('show');
+}
+function closeNewBizModal(){
+  document.getElementById('newBizModal').classList.remove('show');
+}
+function saveNewBiz(){
+  const name = document.getElementById('newBizName').value.trim();
+  const content = document.getElementById('newBizContent').value.trim();
+  const background = document.getElementById('newBizBackground').value.trim();
+  const goal = document.getElementById('newBizGoal').value.trim();
+  if(!name || !content || !background || !goal){
+    showToast('사업명·주요내용·사업수립배경·사업수립목표를 모두 입력하세요.');
+    return;
+  }
+  const school = document.getElementById('schoolFilter').value;
+  const id = 'new_biz_' + (newIdCounter++);
+  const biz = { id, school, dept:'', name, mainContent:content, background, goal, lineItems:[] };
+  workingData.push(biz);
+  closeNewBizModal();
+  selectBiz(id);
+  autosave();
+  showToast('신규 사업이 추가되었습니다.');
+}
+
+// ===================== 계정과목 추가 =====================
+function populateAcctNameOptions(){
+  const fundType = document.getElementById('newAcctFundType').value;
+  const options = ACCOUNT_OPTIONS_BY_FUND[fundType] || [];
+  const sel = document.getElementById('newAcctName');
+  sel.innerHTML = options.map(n=>`<option value="${n}">${n}</option>`).join('');
+}
+function onAcctFundTypeChange(){
+  populateAcctNameOptions();
+}
+function openNewAccountModal(bizId){
+  pendingAccountBizId = bizId;
+  document.getElementById('newAcctFundType').value = '등록금회계';
+  populateAcctNameOptions();
+  document.getElementById('newAccountModal').classList.add('show');
+}
+function closeNewAccountModal(){
+  document.getElementById('newAccountModal').classList.remove('show');
+}
+function saveNewAccount(){
+  const name = document.getElementById('newAcctName').value.trim();
+  if(!name){ showToast('계정과목명을 입력하세요.'); return; }
+  const fundType = document.getElementById('newAcctFundType').value;
+  const biz = findBiz(pendingAccountBizId);
+  if(!biz){ closeNewAccountModal(); return; }
+  const id = biz.id + '_lnew' + (newIdCounter++);
+  const li = {
+    gwanCode:'', gwan:'', hangCode:'', hang:'', acctCode:'', acctName:name,
+    fundType, funds:{}, total:0, details:[{amount:0, desc:''}], id
+  };
+  ORIGINAL_MAP[id] = { total:0, details:[] };
+  biz.lineItems.push(li);
+  closeNewAccountModal();
+  renderDetail();
+  renderBizList();
+  renderSummary();
+  autosave();
+  showToast('계정과목이 추가되었습니다.');
+}
+
+// ===================== 내보내기 (조정 작업) =====================
+function exportChanges(){
+  checkCeilingThenProceed(doExportChanges);
+}
+function doExportChanges(){
+  const owner = ownerName;
+  const changes = [];
+  workingData.forEach(biz=>{
+    biz.lineItems.forEach(li=>{
+      if(isLineItemChanged(li)){
+        const orig = ORIGINAL_MAP[li.id];
+        changes.push({
+          school: biz.school, dept: biz.dept, businessName: biz.name,
+          lineItemId: li.id, gwan: li.gwan, hang: li.hang, acctCode: li.acctCode, acctName: li.acctName,
+          before: {total: orig.total, details: orig.details},
+          after: {total: currentTotal(li), details: li.details}
+        });
+      }
+    });
+  });
+  if(changes.length === 0){
+    showToast('조정된 내역이 없습니다.');
+    return;
+  }
+  const schools = [...new Set(changes.map(c=>c.school))];
+  const payload = {
+    meta:{
+      exportedAt: new Date().toISOString(),
+      owner: owner || null,
+      schools: schools
+    },
+    changes: changes
+  };
+  const fname = `예산조정_${schools.join('-')}_${dateStamp()}.json`;
+  downloadText(fname, JSON.stringify(payload, null, 2), 'application/json');
+  clearAutosave();
+  showToast(`${changes.length}건의 조정내역을 내보냈습니다.`);
+}
+
+// ===================== 취합 탭 =====================
+function handleFiles(fileList){
+  Array.from(fileList).forEach(f=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      try{
+        const json = JSON.parse(e.target.result);
+        if(!json.changes){ showToast(`${f.name}: 올바른 조정내역 파일이 아닙니다.`); return; }
+        uploadedFiles.push({name:f.name, json});
+        renderFileChips();
+        renderConsolidated();
+      }catch(err){
+        showToast(`${f.name}: 파일을 읽을 수 없습니다.`);
+      }
+    };
+    reader.readAsText(f);
+  });
+}
+
+function removeFile(idx){
+  uploadedFiles.splice(idx,1);
+  renderFileChips();
+  renderConsolidated();
+}
+
+function renderFileChips(){
+  const wrap = document.getElementById('fileChipRow');
+  wrap.innerHTML = uploadedFiles.map((f,i)=>`
+    <div class="file-chip"><span>${escapeHtml(f.name)}</span><button onclick="removeFile(${i})">&times;</button></div>
+  `).join('');
+}
+
+let remoteRows = []; // 구글시트에서 불러온 행
+
+function allConsolidatedRows(){
+  const rows = [];
+  function pushChange(c, source, exportedAt){
+    const beforeD = c.before.details || [];
+    const afterD = c.after.details || [];
+    const n = Math.max(beforeD.length, afterD.length, 1);
+    for(let i=0;i<n;i++){
+      const b = beforeD[i], a = afterD[i];
+      rows.push({
+        rowType:'detail', school:c.school, businessName:c.businessName, acctName:c.acctName,
+        beforeDesc: b ? (b.desc||'') : '', beforeAmt: b ? fmt(b.amount) : '',
+        afterDesc: a ? (a.desc||'') : '', afterAmt: a ? fmt(a.amount) : '',
+        source, exportedAt
+      });
+    }
+    rows.push({
+      rowType:'summary', school:c.school, businessName:c.businessName, acctName:c.acctName,
+      before:c.before.total, after:c.after.total, diff:c.after.total - c.before.total,
+      source, exportedAt
+    });
+  }
+  uploadedFiles.forEach(f=>{
+    (f.json.changes||[]).forEach(c=>{
+      pushChange(c, f.name, f.json.meta ? f.json.meta.exportedAt : '');
+    });
+  });
+  remoteRows.forEach(r=>{
+    pushChange(
+      {school:r.school, businessName:r.businessName, acctName:r.acctName,
+       before:{total:Number(r.before)||0, details:(r.beforeDetail||'').split('\n').filter(Boolean).map(desc=>({desc, amount:null}))},
+       after:{total:Number(r.after)||0, details:(r.afterDetail||'').split('\n').filter(Boolean).map(desc=>({desc, amount:null}))}},
+      '구글시트' + (r.owner ? ` (${r.owner})` : ''), r.submittedAt || ''
+    );
+  });
+  return rows;
+}
+
+function renderConsolidated(){
+  const rows = allConsolidatedRows();
+  const body = document.getElementById('consTableBody');
+  body.innerHTML = rows.map(r=>{
+    if(r.rowType === 'summary'){
+      const diffClass = r.diff>0?'increase':(r.diff<0?'decrease':'');
+      return `
+        <tr class="row-summary">
+          <td>${escapeHtml(r.school)}</td>
+          <td>${escapeHtml(r.businessName)}</td>
+          <td>${escapeHtml(r.acctName)}</td>
+          <td colspan="4" style="text-align:right; font-weight:700; color:var(--ink-soft);">합계</td>
+          <td class="num-col">${fmt(r.before)}</td>
+          <td class="num-col">${fmt(r.after)}</td>
+          <td class="num-col ${diffClass}">${fmtSigned(r.diff)}</td>
+          <td>${escapeHtml(r.source)}</td>
+          <td>${r.exportedAt ? new Date(r.exportedAt).toLocaleString('ko-KR') : ''}</td>
+        </tr>`;
+    }
+    return `
+      <tr>
+        <td>${escapeHtml(r.school)}</td>
+        <td>${escapeHtml(r.businessName)}</td>
+        <td>${escapeHtml(r.acctName)}</td>
+        <td>${escapeHtml(r.beforeDesc)}</td>
+        <td class="num-col">${escapeHtml(r.beforeAmt)}</td>
+        <td>${escapeHtml(r.afterDesc)}</td>
+        <td class="num-col">${escapeHtml(r.afterAmt)}</td>
+        <td class="num-col" colspan="3"></td>
+        <td>${escapeHtml(r.source)}</td>
+        <td>${r.exportedAt ? new Date(r.exportedAt).toLocaleString('ko-KR') : ''}</td>
+      </tr>`;
+  }).join('');
+
+  const summaryWrap = document.getElementById('consSummaryWrap');
+  const summaryRows = rows.filter(r=>r.rowType==='summary');
+  if(summaryRows.length === 0){ summaryWrap.innerHTML=''; return; }
+  const schools = new Set(summaryRows.map(r=>r.school));
+  const totalDiff = summaryRows.reduce((s,r)=>s+r.diff,0);
+  summaryWrap.innerHTML = `
+    <div class="summary-strip" style="border:1px solid var(--line); border-radius:var(--radius); padding-left:20px;">
+      <div class="summary-item"><div class="label">취합 출처 수</div><div class="value">${uploadedFiles.length + (remoteRows.length?1:0)}</div></div>
+      <div class="summary-item"><div class="label">조정 건수</div><div class="value">${summaryRows.length}</div></div>
+      <div class="summary-item"><div class="label">관련 스쿨 수</div><div class="value">${schools.size}</div></div>
+      <div class="summary-item"><div class="label">전체 증감</div><div class="value ${totalDiff>0?'increase':(totalDiff<0?'decrease':'')}">${fmtSigned(totalDiff)}원</div></div>
+    </div>
+  `;
+}
+
+function exportConsolidatedJSON(){
+  const rows = allConsolidatedRows();
+  if(rows.length===0){ showToast('취합할 내역이 없습니다.'); return; }
+  downloadText(`예산조정_취합_${dateStamp()}.json`, JSON.stringify(rows, null, 2), 'application/json');
+}
+
+function exportConsolidatedExcel(){
+  const rows = allConsolidatedRows();
+  if(rows.length===0){ showToast('취합할 내역이 없습니다.'); return; }
+  if(typeof XLSX === 'undefined'){ showToast('엑셀 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인해주세요.'); return; }
+  const data = rows.map(r=>{
+    if(r.rowType === 'summary'){
+      const changed = r.diff !== 0;
+      return {
+        '스쿨': r.school, '사업명': r.businessName, '계정과목': r.acctName,
+        '조정 전 내용': '', '조정 전 금액': '', '조정 후 내용': '', '조정 후 금액': '',
+        '조정 전 합계': r.before, '조정 후 합계': r.after, '증감': r.diff,
+        '변경여부': changed ? '변경됨' : '동일',
+        '출처': r.source, '제출시각': r.exportedAt ? new Date(r.exportedAt).toLocaleString('ko-KR') : ''
+      };
+    }
+    const descChanged = r.beforeDesc !== r.afterDesc;
+    const amtChanged = r.beforeAmt !== r.afterAmt;
+    const changed = descChanged || amtChanged;
+    return {
+      '스쿨': r.school, '사업명': r.businessName, '계정과목': r.acctName,
+      '조정 전 내용': r.beforeDesc, '조정 전 금액': r.beforeAmt,
+      '조정 후 내용': (descChanged ? '▲ ' : '') + r.afterDesc,
+      '조정 후 금액': (amtChanged ? '▲ ' : '') + r.afterAmt,
+      '조정 전 합계': '', '조정 후 합계': '', '증감': '',
+      '변경여부': changed ? '변경됨' : '동일',
+      '출처': r.source, '제출시각': r.exportedAt ? new Date(r.exportedAt).toLocaleString('ko-KR') : ''
+    };
+  });
+  const ws = XLSX.utils.json_to_sheet(data);
+  ws['!cols'] = [{wch:14},{wch:36},{wch:22},{wch:28},{wch:14},{wch:28},{wch:14},{wch:14},{wch:14},{wch:14},{wch:10},{wch:20},{wch:20}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '취합내역');
+  const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  __smartDownload(`예산조정_취합_${dateStamp()}.xlsx`, new Blob([wbout], {type:'application/octet-stream'}));
+}
+
+// ===================== 구글시트 연동 =====================
+const APPS_SCRIPT_TEMPLATE = `function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('조정내역')
+    || SpreadsheetApp.getActiveSpreadsheet().insertSheet('조정내역');
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(['제출시각','작성자','스쿨','부서','사업명','계정과목',
+      '조정전 합계','조정후 합계','증감','조정전 산출근거','조정후 산출근거']);
+  }
+  var data = JSON.parse(e.postData.contents);
+  var owner = (data.meta && data.meta.owner) || '';
+  (data.changes || []).forEach(function (c) {
+    var beforeText = (c.before.details || []).map(function (d) { return d.amount + ' · ' + d.desc; }).join('\\n');
+    var afterText = (c.after.details || []).map(function (d) { return d.amount + ' · ' + d.desc; }).join('\\n');
+    sheet.appendRow([new Date(), owner, c.school, c.dept, c.businessName, c.acctName,
+      c.before.total, c.after.total, c.after.total - c.before.total, beforeText, afterText]);
+  });
+  return ContentService.createTextOutput(JSON.stringify({ ok: true }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('조정내역');
+  var result = [];
+  if (sheet && sheet.getLastRow() > 1) {
+    var rows = sheet.getDataRange().getValues();
+    for (var i = 1; i < rows.length; i++) {
+      var r = rows[i];
+      result.push({
+        submittedAt: r[0], owner: r[1], school: r[2], dept: r[3], businessName: r[4],
+        acctName: r[5], before: r[6], after: r[7], diff: r[8],
+        beforeDetail: r[9], afterDetail: r[10]
+      });
+    }
+  }
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+
+function getSheetUrl(){
+  try{ return localStorage.getItem('budgetAppSheetUrl') || ''; }catch(e){ return ''; }
+}
+function setSheetUrl(url){
+  try{ localStorage.setItem('budgetAppSheetUrl', url); }catch(e){}
+}
+
+function openSettingsModal(){
+  document.getElementById('sheetUrlInput').value = getSheetUrl();
+  document.getElementById('appsScriptCode').value = APPS_SCRIPT_TEMPLATE;
+  document.getElementById('settingsModal').classList.add('show');
+}
+function closeSettingsModal(){
+  document.getElementById('settingsModal').classList.remove('show');
+}
+function saveSheetUrl(){
+  const url = document.getElementById('sheetUrlInput').value.trim();
+  setSheetUrl(url);
+  document.getElementById('sheetUrlStatus').textContent = url ? '저장되었습니다.' : 'URL이 비어 있습니다.';
+  refreshSheetButtons();
+}
+function copyAppsScript(){
+  const box = document.getElementById('appsScriptCode');
+  box.select();
+  navigator.clipboard && navigator.clipboard.writeText(box.value).then(()=>{
+    showToast('코드를 복사했습니다.');
+  }).catch(()=>{ document.execCommand('copy'); showToast('코드를 복사했습니다.'); });
+}
+function refreshSheetButtons(){
+  const url = getSheetUrl();
+  const btn = document.getElementById('sheetSendBtn');
+  if(btn) btn.disabled = !url;
+  const status = document.getElementById('sheetLoadStatus');
+  if(status){
+    status.textContent = url
+      ? '연동된 구글시트에서 실시간 취합본을 불러옵니다.'
+      : '연동설정에서 웹앱 URL을 등록하면 이 버튼으로 실시간 취합본을 불러올 수 있습니다.';
+  }
+}
+
+function sendToGoogleSheet(){
+  checkCeilingThenProceed(doSendToGoogleSheet);
+}
+async function doSendToGoogleSheet(){
+  const url = getSheetUrl();
+  if(!url){ showToast('먼저 연동설정에서 구글시트 웹앱 URL을 등록하세요.'); return; }
+  const owner = ownerName;
+  const changes = [];
+  workingData.forEach(biz=>{
+    biz.lineItems.forEach(li=>{
+      if(isLineItemChanged(li)){
+        const orig = ORIGINAL_MAP[li.id];
+        changes.push({
+          school: biz.school, dept: biz.dept, businessName: biz.name,
+          lineItemId: li.id, gwan: li.gwan, hang: li.hang, acctCode: li.acctCode, acctName: li.acctName,
+          before: {total: orig.total, details: orig.details},
+          after: {total: currentTotal(li), details: li.details}
+        });
+      }
+    });
+  });
+  if(changes.length === 0){ showToast('조정된 내역이 없습니다.'); return; }
+  const payload = { meta:{ exportedAt: new Date().toISOString(), owner: owner || null }, changes };
+  try{
+    await fetch(url, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(payload)
+    });
+    showToast(`${changes.length}건을 구글시트로 전송했습니다. 취합 탭 "구글시트에서 불러오기"로 확인해보세요.`);
+    clearAutosave();
+  }catch(err){
+    showToast('전송에 실패했습니다. URL과 네트워크 상태를 확인하세요.');
+  }
+}
+
+function dedupeRemoteRows(rows){
+  const map = new Map();
+  rows.forEach(r=>{
+    const key = `${r.school}|${r.businessName}|${r.acctName}`;
+    const existing = map.get(key);
+    const t = r.submittedAt ? new Date(r.submittedAt).getTime() : 0;
+    const existingT = existing && existing.submittedAt ? new Date(existing.submittedAt).getTime() : -1;
+    if(!existing || t >= existingT){
+      map.set(key, r);
+    }
+  });
+  return Array.from(map.values());
+}
+
+async function loadFromGoogleSheet(){
+  const url = getSheetUrl();
+  if(!url){ showToast('먼저 연동설정에서 구글시트 웹앱 URL을 등록하세요.'); return; }
+  try{
+    const res = await fetch(url, {method:'GET'});
+    const json = await res.json();
+    const raw = Array.isArray(json) ? json : [];
+    remoteRows = dedupeRemoteRows(raw);
+    renderConsolidated();
+    const skipped = raw.length - remoteRows.length;
+    showToast(`구글시트에서 ${remoteRows.length}건을 불러왔습니다.` + (skipped>0 ? ` (중복 제출 ${skipped}건은 최신 것으로 대체)` : ''));
+  }catch(err){
+    showToast('불러오기에 실패했습니다. 웹앱이 "전체 액세스"로 배포되었는지 확인하세요.');
+  }
+}
+
+// ===================== 유틸 =====================
+// 다운로드 브리지: 런처(iframe) 안에서는 부모의 downloads 기능을 사용하고,
+// 이 파일을 단독으로 열었을 때는 기존 방식(blob 링크)으로 동작합니다.
+function __smartDownload(filename, data, mime){
+  const blob = (data instanceof Blob) ? data : new Blob([data], {type: mime || 'application/octet-stream'});
+  if (window.parent && window.parent !== window) {
+    return new Promise((resolve, reject)=>{
+      const id = 'dl_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+      let done = false;
+      function onMsg(e){
+        const d = e.data;
+        if(!d || d.type !== 'app-download-result' || d.id !== id) return;
+        done = true;
+        window.removeEventListener('message', onMsg);
+        if(d.ok) resolve(d.result); else reject(d.error);
+      }
+      window.addEventListener('message', onMsg);
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        window.parent.postMessage({type:'app-download-request', id, filename, data: reader.result}, '*');
+      };
+      reader.readAsArrayBuffer(blob);
+      setTimeout(()=>{ if(!done){ window.removeEventListener('message', onMsg); reject({code:'unavailable', message:'timeout'}); } }, 15000);
+    });
+  } else {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 1500);
+    return Promise.resolve({status:'saved'});
+  }
+}
+function downloadText(filename, text, mime){
+  __smartDownload(filename, new Blob([text], {type:mime}));
+}
+function dateStamp(){
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function escapeHtml(s){
+  return String(s??'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function escapeAttr(s){ return escapeHtml(s); }
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 3800);
+}
+
+// drag & drop for upload zone
+document.addEventListener('DOMContentLoaded', ()=>{
+  const zone = document.getElementById('uploadZone');
+  ['dragover'].forEach(evt=>zone.addEventListener(evt, e=>{e.preventDefault(); zone.classList.add('dragover');}));
+  ['dragleave','drop'].forEach(evt=>zone.addEventListener(evt, e=>{e.preventDefault(); zone.classList.remove('dragover');}));
+  zone.addEventListener('drop', e=>{ handleFiles(e.dataTransfer.files); });
+
+  initSchoolFilter();
+  renderBizList();
+  renderSummary();
+  renderConsolidated();
+  refreshSheetButtons();
+  document.getElementById('landingVersion').textContent = APP_VERSION;
+  document.getElementById('topbarVersion').textContent = APP_VERSION;
+});
+
+</script>
+</body>
+</html>

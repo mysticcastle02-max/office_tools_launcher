@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>규정개정 도구 V1.0</title>
+<script src="libs/pdf.min.js"></script>
+<style>
+  :root{
+    --navy:#152a4a;
+    --navy-deep:#0c1b32;
+    --steel:#4a5b7a;
+    --line:#dfe4ee;
+    --bg:#f4f6fb;
+    --card:#ffffff;
+    --accent:#c8892e;
+    --good:#2f7d5c;
+    --bad:#b3432b;
+    --text:#1b2333;
+    --sub:#6b7690;
+    --del-bg:#fbeeec;
+    --ins-bg:#eaf1fb;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Pretendard","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    padding:32px 20px 100px;
+  }
+  .wrap{max-width:1100px;margin:0 auto;}
+  header{margin-bottom:24px;}
+  header h1{font-size:22px;margin:0 0 6px;letter-spacing:-0.02em;color:var(--navy-deep);}
+  header p{margin:0;color:var(--sub);font-size:13.5px;line-height:1.6;}
+
+  /* ---- Steps nav ---- */
+  .steps{display:flex;gap:6px;margin:22px 0;border-bottom:1px solid var(--line);}
+  .step-btn{
+    padding:10px 16px;font-size:13.5px;font-weight:600;color:var(--sub);
+    background:none;border:none;border-bottom:2px solid transparent;
+    cursor:pointer;margin-bottom:-1px;
+  }
+  .step-btn.active{color:var(--navy-deep);border-bottom-color:var(--navy);}
+  .step-btn:disabled{color:#c3cad9;cursor:not-allowed;}
+  .panel{display:none;}
+  .panel.show{display:block;}
+
+  /* ---- Upload zone ---- */
+  .upload-zone{
+    border:1.5px dashed #b7c1d6;background:var(--card);border-radius:14px;
+    padding:34px 24px;text-align:center;cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .upload-zone.drag{border-color:var(--navy);background:#eef1fa;}
+  .upload-zone svg{width:30px;height:30px;color:var(--steel);margin-bottom:10px;}
+  .upload-zone .main-txt{font-size:14.5px;font-weight:600;color:var(--navy-deep);}
+  .upload-zone .sub-txt{font-size:12.5px;color:var(--sub);margin-top:4px;}
+  input[type=file]{display:none;}
+
+  .or-divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--sub);font-size:12.5px;}
+  .or-divider::before,.or-divider::after{content:"";flex:1;height:1px;background:var(--line);}
+
+  textarea.paste-area{
+    width:100%;min-height:160px;border:1px solid var(--line);border-radius:10px;
+    padding:14px;font-size:13.5px;font-family:inherit;resize:vertical;
+    background:var(--card);color:var(--text);
+  }
+
+  .status{display:none;align-items:center;gap:10px;margin-top:14px;font-size:13px;color:var(--steel);}
+  .status.show{display:flex;}
+  .spinner{width:14px;height:14px;border-radius:50%;border:2px solid #cfd6e6;border-top-color:var(--navy);animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .error-box{display:none;margin-top:16px;background:#fbeeec;border:1px solid #eecbc3;color:var(--bad);padding:14px 16px;border-radius:10px;font-size:13px;line-height:1.6;white-space:pre-line;}
+  .error-box.show{display:block;}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:9px;
+    font-size:13.5px;font-weight:600;cursor:pointer;border:none;
+  }
+  .btn-primary{background:var(--navy);color:#fff;}
+  .btn-primary:hover{background:var(--navy-deep);}
+  .btn-secondary{background:#fff;color:var(--navy-deep);border:1px solid var(--line);}
+  .btn-secondary:hover{background:#f0f2f8;}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .btn-row{display:flex;gap:10px;margin-top:18px;justify-content:flex-end;}
+
+  /* ---- Info form ---- */
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;}
+  .info-grid .full{grid-column:1 / -1;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--sub);margin-bottom:6px;}
+  .field input, .field textarea{
+    width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;
+    font-size:13.5px;font-family:inherit;background:#fff;color:var(--text);
+  }
+  .field textarea{min-height:70px;resize:vertical;}
+
+  /* ---- Article editor ---- */
+  .article-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px;}
+  .article-card.heading{background:#f0f2f8;border-color:#d7deec;}
+  .article-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .article-tag{font-size:12px;font-weight:700;color:var(--navy);}
+  .status-select{
+    font-size:12px;border:1px solid var(--line);border-radius:6px;padding:4px 8px;
+    background:#fff;color:var(--steel);font-family:inherit;
+  }
+  .article-body{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .article-body.heading-body{grid-template-columns:1fr;}
+  .col-label{font-size:11px;font-weight:700;color:var(--sub);margin-bottom:6px;letter-spacing:.02em;}
+  .original-text{
+    background:#f8f9fc;border:1px solid var(--line);border-radius:8px;padding:10px 12px;
+    font-size:13px;line-height:1.7;white-space:pre-wrap;color:var(--text);min-height:60px;
+  }
+  .revise-area{
+    width:100%;min-height:60px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;
+    font-size:13px;line-height:1.7;font-family:inherit;resize:vertical;color:var(--text);
+  }
+  .reason-row{margin-top:10px;}
+  .reason-row input{
+    width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 11px;
+    font-size:12.5px;font-family:inherit;color:var(--text);
+  }
+  .reason-row label{font-size:11px;font-weight:700;color:var(--sub);margin-bottom:5px;display:block;}
+
+  /* ---- Diff colors ---- */
+  .diff-del{background:var(--del-bg);color:var(--bad);text-decoration:line-through;padding:0 1px;border-radius:2px;}
+  .diff-ins{background:var(--ins-bg);color:var(--navy);font-weight:600;padding:0 1px;border-radius:2px;}
+
+  /* ---- Table (신구조문 대비표) ---- */
+  table.compare{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:13px;}
+  table.compare th,table.compare td{padding:11px 13px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.65;}
+  table.compare thead th{background:#f0f2f8;color:var(--navy-deep);font-weight:700;font-size:12.5px;}
+  table.compare td.heading-row{background:#f8f9fc;font-weight:700;color:var(--navy-deep);}
+  table.compare col.col-current{width:32%;}
+  table.compare col.col-revised{width:32%;}
+  table.compare col.col-reason{width:36%;}
+  .reason-cell{color:var(--sub);font-size:12.5px;white-space:pre-wrap;}
+
+  /* ---- Full text view ---- */
+  .fulltext{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px 30px;font-size:13.5px;line-height:1.9;}
+  .fulltext .ft-heading{font-weight:700;color:var(--navy-deep);margin:18px 0 8px;}
+  .fulltext .ft-para{white-space:pre-wrap;margin-bottom:6px;}
+
+  .meta-line{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;color:var(--sub);margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--line);}
+  .meta-line b{color:var(--navy-deep);}
+
+  footer{margin-top:40px;font-size:11.5px;color:#9aa4ba;text-align:center;}
+
+  @media print {
+    .steps, .btn-row, header p, .upload-zone, .or-divider { display:none !important; }
+    body{padding:0;background:#fff;}
+    .panel{display:block !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>규정개정 도구 <span style="color:var(--accent);font-size:14px;font-weight:600;">V1.0</span></h1>
+    <p>PDF 업로드 → 조문 편집 → 신구조문 대비표 · 개정전문 확인 → Word/PDF 다운로드까지 한 번에. 모든 처리는 브라우저 안에서만 이루어집니다.</p>
+  </header>
+
+  <div class="steps">
+    <button class="step-btn active" data-step="1">① 입력</button>
+    <button class="step-btn" data-step="2" disabled>② 규정 정보</button>
+    <button class="step-btn" data-step="3" disabled>③ 조문 편집</button>
+    <button class="step-btn" data-step="4" disabled>④ 신구조문 대비표</button>
+    <button class="step-btn" data-step="5" disabled>⑤ 개정전문</button>
+  </div>
+
+  <!-- STEP 1: 입력 -->
+  <div class="panel show" id="panel-1">
+    <div id="uploadZone" class="upload-zone">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 15V3m0 0L7 8m5-5l5 5"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
+      <div class="main-txt">PDF를 여기에 끌어놓거나 클릭해서 선택하세요</div>
+      <div class="sub-txt">현행 규정 전문 PDF (조문 구조 자동 인식)</div>
+      <input type="file" id="fileInput" accept="application/pdf">
+    </div>
+    <div class="or-divider">또는 텍스트 직접 붙여넣기</div>
+    <textarea class="paste-area" id="pasteArea" placeholder="현행 규정 전문을 여기에 붙여넣으세요..."></textarea>
+    <div class="status" id="statusBar"><div class="spinner"></div><span id="statusText">분석 중...</span></div>
+    <div class="error-box" id="errorBox"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="parseBtn">조문 구조 분석 →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: 규정 정보 -->
+  <div class="panel" id="panel-2">
+    <div class="info-grid">
+      <div class="field"><label>규정명</label><input type="text" id="infoName" placeholder="예: 제규정관리규정"></div>
+      <div class="field"><label>규정번호</label><input type="text" id="infoNumber" placeholder="예: 1-1-9"></div>
+      <div class="field full"><label>개정배경</label><textarea id="infoBackground" placeholder="이번 개정이 필요한 배경을 입력하세요"></textarea></div>
+      <div class="field full"><label>주요내용</label><textarea id="infoContent" placeholder="주요 개정 내용을 입력하세요"></textarea></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" data-goto="1">← 이전</button>
+      <button class="btn btn-primary" data-goto="3">조문 편집으로 →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: 조문 편집 -->
+  <div class="panel" id="panel-3">
+    <div class="meta-line"><span>총 <b id="articleCount">0</b>개 항목 감지됨</span><span>각 조문의 개정안을 입력하면 우측 대비표·개정전문에 실시간 반영됩니다</span></div>
+    <div id="articleList"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" data-goto="2">← 이전</button>
+      <button class="btn btn-primary" data-goto="4">대비표 보기 →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: 신구조문 대비표 -->
+  <div class="panel" id="panel-4">
+    <table class="compare">
+      <colgroup><col class="col-current"><col class="col-revised"><col class="col-reason"></colgroup>
+      <thead><tr><th>현행</th><th>개정안</th><th>개정사유</th></tr></thead>
+      <tbody id="compareBody"></tbody>
+    </table>
+    <div class="btn-row">
+      <button class="btn btn-secondary" data-goto="3">← 이전</button>
+      <button class="btn btn-secondary" id="downloadWordCompare">Word 다운로드</button>
+      <button class="btn btn-secondary" id="printCompare">PDF로 저장(인쇄)</button>
+      <button class="btn btn-primary" data-goto="5">개정전문 보기 →</button>
+    </div>
+  </div>
+
+  <!-- STEP 5: 개정전문 -->
+  <div class="panel" id="panel-5">
+    <div class="fulltext" id="fulltextView"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" data-goto="4">← 이전</button>
+      <button class="btn btn-secondary" id="downloadWordFull">Word 다운로드</button>
+      <button class="btn btn-primary" id="printFull">PDF로 저장(인쇄)</button>
+    </div>
+  </div>
+
+  <footer>모든 계산과 문서 생성은 브라우저 안에서만 이루어지며, 파일은 외부로 전송되지 않습니다.</footer>
+</div>
+
+<script>
+/* ============================================================
+   상태
+============================================================ */
+let articles = []; // {id, type:'heading'|'article', tagLabel, text, revised, reason, status}
+let regInfo = { name:'', number:'', background:'', content:'' };
+
+/* ============================================================
+   STEP 네비게이션
+============================================================ */
+function gotoStep(n){
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('show'));
+  document.getElementById('panel-'+n).classList.add('show');
+  document.querySelectorAll('.step-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.step == n);
+  });
+  if(n==4) renderCompareTable();
+  if(n==5) renderFullText();
+}
+document.querySelectorAll('[data-goto]').forEach(btn=>{
+  btn.addEventListener('click', ()=> gotoStep(btn.dataset.goto));
+});
+document.querySelectorAll('.step-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{ if(!btn.disabled) gotoStep(btn.dataset.step); });
+});
+function enableSteps(upTo){
+  document.querySelectorAll('.step-btn').forEach(b=>{
+    if(+b.dataset.step <= upTo) b.disabled = false;
+  });
+}
+
+/* ============================================================
+   STEP 1: PDF 업로드 / 파싱
+   (실측 검증 반영: GAP=3pt, 병합 후 페이지번호 필터, 단어 사이 공백 보존)
+============================================================ */
+pdfjsLib.GlobalWorkerOptions.workerSrc = "libs/pdf.worker.min.js";
+
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+const statusBar = document.getElementById('statusBar');
+const statusText = document.getElementById('statusText');
+const errorBox = document.getElementById('errorBox');
+const pasteArea = document.getElementById('pasteArea');
+
+uploadZone.addEventListener('click', ()=>fileInput.click());
+uploadZone.addEventListener('dragover', e=>{e.preventDefault();uploadZone.classList.add('drag');});
+uploadZone.addEventListener('dragleave', ()=>uploadZone.classList.remove('drag'));
+uploadZone.addEventListener('drop', e=>{
+  e.preventDefault(); uploadZone.classList.remove('drag');
+  if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e=>{ if(e.target.files.length) handleFile(e.target.files[0]); });
+
+function showError(msg){
+  statusBar.classList.remove('show');
+  errorBox.textContent = msg;
+  errorBox.classList.add('show');
+}
+
+async function handleFile(file){
+  errorBox.classList.remove('show');
+  if(file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')){
+    showError('PDF 파일만 업로드할 수 있습니다.'); return;
+  }
+  statusText.textContent = 'PDF에서 텍스트를 추출하는 중입니다...';
+  statusBar.classList.add('show');
+  try{
+    const buf = await file.arrayBuffer();
+    const text = await extractPdfText(buf);
+    pasteArea.value = text;
+    statusBar.classList.remove('show');
+  }catch(err){
+    console.error(err);
+    showError('PDF 분석에 실패했습니다: ' + err.message);
+  }
+}
+
+async function extractPdfText(arrayBuffer){
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const pageTexts = [];
+  const GAP = 3;          // 실측: 음절간 -0.5~0pt / 단어간 5.3~5.7pt → 3pt가 안전 경계
+  const Y_TOL = 8;
+  const pageNumRe = /^\d+-\d+-\d{1,3}$/;
+
+  for(let p=1;p<=pdf.numPages;p++){
+    const page = await pdf.getPage(p);
+    const viewport = page.getViewport({ scale:1.0 });
+    const content = await page.getTextContent();
+
+    const items = content.items
+      .filter(it => it.str && it.str.trim() !== '')
+      .map(it => ({ text: it.str, x0: it.transform[4], x1: it.transform[4]+it.width, y: it.transform[5] }));
+
+    items.sort((a,b)=> b.y-a.y || a.x0-b.x0);
+    const lines = [];
+    for(const it of items){
+      let line = lines.find(l => Math.abs(l.y-it.y) < Y_TOL);
+      if(!line){ line = {y:it.y, items:[]}; lines.push(line); }
+      line.items.push(it);
+    }
+
+    // 단어 병합을 먼저 수행 (조각난 페이지번호 "1"+"-1-9"가 하나로 합쳐지도록)
+    const words = [];
+    for(const line of lines){
+      line.items.sort((a,b)=>a.x0-b.x0);
+      let cur = null;
+      for(const it of line.items){
+        if(cur && (it.x0 - cur.x1) < GAP){
+          cur.text += it.text;
+          cur.x1 = Math.max(cur.x1, it.x1);
+        } else {
+          if(cur) words.push(cur);
+          cur = { text: it.text, x0: it.x0, x1: it.x1, y: it.y };
+        }
+      }
+      if(cur) words.push(cur);
+    }
+
+    // 병합 후 페이지번호 필터링 (정규식 + 좌표: X>70%, Y>88%)
+    const kept = words.filter(w=>{
+      const t = w.text.replace(/\s+/g,'');
+      const isPageNum = pageNumRe.test(t);
+      const isTopRight = (w.x0/viewport.width) > 0.70 && (w.y/viewport.height) > 0.88;
+      return !(isPageNum && isTopRight);
+    });
+
+    // 라인 재구성 (단어 사이는 공백으로 연결)
+    const byY = {};
+    for(const w of kept){
+      const key = Math.round(w.y / 4) * 4;
+      if(!byY[key]) byY[key] = [];
+      byY[key].push(w);
+    }
+    const ys = Object.keys(byY).map(Number).sort((a,b)=>b-a);
+    const pageLines = ys.map(y => byY[y].sort((a,b)=>a.x0-b.x0).map(w=>w.text).join(' '));
+    pageTexts.push(pageLines.join('\n'));
+  }
+  return pageTexts.join('\n');
+}
+
+/* ============================================================
+   조문 구조 파싱 (제N장 / 제N조 / 부칙 / 별지 감지)
+============================================================ */
+document.getElementById('parseBtn').addEventListener('click', ()=>{
+  const raw = pasteArea.value.trim();
+  if(!raw){ showError('분석할 텍스트가 없습니다. PDF를 업로드하거나 텍스트를 붙여넣어 주세요.'); return; }
+  errorBox.classList.remove('show');
+  articles = parseArticles(raw);
+  document.getElementById('articleCount').textContent = articles.filter(a=>a.type==='article').length;
+  renderArticleList();
+  enableSteps(3);
+  gotoStep(2);
+});
+
+function parseArticles(raw){
+  const lines = raw.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+  const headingRe = /^(제\s*\d+\s*장|부\s*칙|부칙)/;
+  const articleRe = /^(제\s*\d+\s*조)(\([^)]*\))?/;
+
+  const result = [];
+  let buffer = [];
+  let bufMeta = null;
+
+  function flush(){
+    if(bufMeta){
+      result.push({
+        id: result.length,
+        type: bufMeta.type,
+        tagLabel: bufMeta.tagLabel,
+        text: buffer.join(' '),
+        revised: buffer.join(' '),
+        reason: '',
+        status: '유지'
+      });
+    } else if(buffer.length){
+      // 조문 인식 전 서두 텍스트(제목 등)
+      result.push({ id: result.length, type:'heading', tagLabel:'', text: buffer.join(' '), revised: buffer.join(' '), reason:'', status:'유지' });
+    }
+    buffer = [];
+  }
+
+  for(const line of lines){
+    const hMatch = line.match(headingRe);
+    const aMatch = line.match(articleRe);
+    if(hMatch){
+      flush();
+      bufMeta = { type:'heading', tagLabel: hMatch[1].replace(/\s+/g,'') };
+      buffer.push(line);
+    } else if(aMatch){
+      flush();
+      bufMeta = { type:'article', tagLabel: aMatch[1].replace(/\s+/g,'') + (aMatch[2]||'') };
+      buffer.push(line);
+    } else {
+      buffer.push(line);
+    }
+  }
+  flush();
+  return result;
+}
+
+/* ============================================================
+   STEP 3: 조문 편집 UI
+============================================================ */
+function renderArticleList(){
+  const wrap = document.getElementById('articleList');
+  wrap.innerHTML = articles.map(a => {
+    if(a.type === 'heading'){
+      return `
+      <div class="article-card heading" data-id="${a.id}">
+        <div class="article-head"><span class="article-tag">${a.tagLabel || '제목/부칙'}</span></div>
+        <div class="article-body heading-body">
+          <div>
+            <div class="col-label">현행 · 개정안 (직접 수정 가능)</div>
+            <textarea class="revise-area" data-id="${a.id}" style="min-height:44px;">${escapeHtml(a.revised)}</textarea>
+          </div>
+        </div>
+      </div>`;
+    }
+    return `
+    <div class="article-card" data-id="${a.id}">
+      <div class="article-head">
+        <span class="article-tag">${a.tagLabel}</span>
+        <select class="status-select" data-id="${a.id}">
+          <option value="유지" ${a.status==='유지'?'selected':''}>유지</option>
+          <option value="수정" ${a.status==='수정'?'selected':''}>수정</option>
+          <option value="신설" ${a.status==='신설'?'selected':''}>신설</option>
+          <option value="삭제" ${a.status==='삭제'?'selected':''}>삭제</option>
+        </select>
+      </div>
+      <div class="article-body">
+        <div>
+          <div class="col-label">현행</div>
+          <div class="original-text">${escapeHtml(a.text)}</div>
+        </div>
+        <div>
+          <div class="col-label">개정안</div>
+          <textarea class="revise-area" data-id="${a.id}">${escapeHtml(a.revised)}</textarea>
+        </div>
+      </div>
+      <div class="reason-row">
+        <label>개정사유</label>
+        <input type="text" class="reason-input" data-id="${a.id}" value="${escapeHtml(a.reason)}" placeholder="이 조문을 개정/신설/삭제하는 사유를 입력하세요">
+      </div>
+    </div>`;
+  }).join('');
+
+  wrap.querySelectorAll('.revise-area').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const a = articles.find(x=>x.id==el.dataset.id);
+      a.revised = el.value;
+    });
+  });
+  wrap.querySelectorAll('.reason-input').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const a = articles.find(x=>x.id==el.dataset.id);
+      a.reason = el.value;
+    });
+  });
+  wrap.querySelectorAll('.status-select').forEach(el=>{
+    el.addEventListener('change', ()=>{
+      const a = articles.find(x=>x.id==el.dataset.id);
+      a.status = el.value;
+    });
+  });
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ============================================================
+   단어 단위 diff (LCS 기반) — 삭제=빨강 취소선, 추가=파랑 굵게
+============================================================ */
+function tokenize(s){
+  return (s||'').split(/(\s+|[,.()"'""''·;:!?])/).filter(t=>t!=='');
+}
+function diffWords(oldStr, newStr){
+  const a = tokenize(oldStr), b = tokenize(newStr);
+  const n=a.length, m=b.length;
+  const dp = Array.from({length:n+1}, ()=>new Array(m+1).fill(0));
+  for(let i=n-1;i>=0;i--){
+    for(let j=m-1;j>=0;j--){
+      dp[i][j] = a[i]===b[j] ? dp[i+1][j+1]+1 : Math.max(dp[i+1][j], dp[i][j+1]);
+    }
+  }
+  let i=0,j=0; const ops=[];
+  while(i<n && j<m){
+    if(a[i]===b[j]){ ops.push({type:'eq', text:a[i]}); i++; j++; }
+    else if(dp[i+1][j] >= dp[i][j+1]){ ops.push({type:'del', text:a[i]}); i++; }
+    else { ops.push({type:'ins', text:b[j]}); j++; }
+  }
+  while(i<n){ ops.push({type:'del', text:a[i]}); i++; }
+  while(j<m){ ops.push({type:'ins', text:b[j]}); j++; }
+  return ops;
+}
+function renderDiffHtml(oldStr, newStr){
+  if(oldStr === newStr) return escapeHtml(newStr);
+  const ops = diffWords(oldStr, newStr);
+  return ops.map(op=>{
+    const t = escapeHtml(op.text);
+    if(op.type==='eq') return t;
+    if(op.type==='del') return `<span class="diff-del">${t}</span>`;
+    return `<span class="diff-ins">${t}</span>`;
+  }).join('');
+}
+
+/* ============================================================
+   STEP 4: 신구조문 대비표
+============================================================ */
+function renderCompareTable(){
+  const body = document.getElementById('compareBody');
+  body.innerHTML = articles.map(a=>{
+    if(a.type==='heading'){
+      return `<tr><td class="heading-row" colspan="3">${escapeHtml(a.revised)}</td></tr>`;
+    }
+    const changed = a.text !== a.revised;
+    return `<tr>
+      <td>${escapeHtml(a.text)}</td>
+      <td>${changed ? renderDiffHtml(a.text, a.revised) : escapeHtml(a.revised)}</td>
+      <td class="reason-cell">${a.status!=='유지' ? `<b style="color:var(--navy);">[${a.status}]</b> ` : ''}${escapeHtml(a.reason)}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ============================================================
+   STEP 5: 개정전문
+============================================================ */
+function renderFullText(){
+  const view = document.getElementById('fulltextView');
+  view.innerHTML = articles.map(a=>{
+    const content = a.text !== a.revised ? renderDiffHtml(a.text, a.revised) : escapeHtml(a.revised);
+    if(a.type==='heading'){
+      return `<div class="ft-heading">${content}</div>`;
+    }
+    return `<div class="ft-para">${content}</div>`;
+  }).join('');
+}
+
+/* ============================================================
+   다운로드 — Word (.doc, HTML 기반 / 계층별 서식) & PDF(인쇄)
+============================================================ */
+function buildWordHtml(bodyHtml, title){
+  return `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+  <head><meta charset="utf-8"><title>${title}</title>
+  <style>
+    body{font-family:'맑은 고딕';font-size:11pt;line-height:1.7;}
+    h1{font-size:15pt;font-weight:700;}
+    h2{font-size:13pt;font-weight:700;margin-top:16pt;}
+    table{border-collapse:collapse;width:100%;}
+    td,th{border:1px solid #999;padding:6pt 8pt;vertical-align:top;font-size:10.5pt;}
+    th{background:#f0f2f8;}
+    .del{color:#b3432b;text-decoration:line-through;}
+    .ins{color:#152a4a;font-weight:700;}
+  </style></head>
+  <body>${bodyHtml}</body></html>`;
+}
+// 다운로드 브리지: 런처(iframe) 안에서는 부모의 downloads 기능을 사용하고,
+// 이 파일을 단독으로 열었을 때는 기존 방식(blob 링크)으로 동작합니다.
+function __smartDownload(filename, data, mime){
+  const blob = (data instanceof Blob) ? data : new Blob([data], {type: mime || 'application/octet-stream'});
+  if (window.parent && window.parent !== window) {
+    return new Promise((resolve, reject)=>{
+      const id = 'dl_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+      let done = false;
+      function onMsg(e){
+        const d = e.data;
+        if(!d || d.type !== 'app-download-result' || d.id !== id) return;
+        done = true;
+        window.removeEventListener('message', onMsg);
+        if(d.ok) resolve(d.result); else reject(d.error);
+      }
+      window.addEventListener('message', onMsg);
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        window.parent.postMessage({type:'app-download-request', id, filename, data: reader.result}, '*');
+      };
+      reader.readAsArrayBuffer(blob);
+      setTimeout(()=>{ if(!done){ window.removeEventListener('message', onMsg); reject({code:'unavailable', message:'timeout'}); } }, 15000);
+    });
+  } else {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 1500);
+    return Promise.resolve({status:'saved'});
+  }
+}
+function downloadDoc(html, filename){
+  const converted = html.replace(/class="diff-del"/g,'class="del"').replace(/class="diff-ins"/g,'class="ins"');
+  const blob = new Blob(['﻿', converted], { type:'application/msword' });
+  __smartDownload(filename, blob);
+}
+
+document.getElementById('downloadWordCompare').addEventListener('click', ()=>{
+  const rows = articles.map(a=>{
+    if(a.type==='heading') return `<tr><td colspan="3"><b>${escapeHtml(a.revised)}</b></td></tr>`;
+    const changed = a.text !== a.revised;
+    return `<tr><td>${escapeHtml(a.text)}</td><td>${changed?renderDiffHtml(a.text,a.revised):escapeHtml(a.revised)}</td><td>${a.status!=='유지'?`[${a.status}] `:''}${escapeHtml(a.reason)}</td></tr>`;
+  }).join('');
+  const body = `<h1>${escapeHtml(regInfo.name||'신구조문 대비표')}</h1>
+    <table><tr><th>현행</th><th>개정안</th><th>개정사유</th></tr>${rows}</table>`;
+  downloadDoc(buildWordHtml(body,'신구조문대비표'), `${regInfo.name||'규정'}_신구조문대비표.doc`);
+});
+
+document.getElementById('downloadWordFull').addEventListener('click', ()=>{
+  const body = articles.map(a=>{
+    const content = a.text !== a.revised ? renderDiffHtml(a.text,a.revised) : escapeHtml(a.revised);
+    return a.type==='heading' ? `<h2>${content}</h2>` : `<p>${content}</p>`;
+  }).join('');
+  downloadDoc(buildWordHtml(`<h1>${escapeHtml(regInfo.name||'개정전문')}</h1>${body}`,'개정전문'), `${regInfo.name||'규정'}_개정전문.doc`);
+});
+
+(function setupPrintButtons(){
+  // 런처(index.html)가 iframe src에 ?host=artifact 를 붙여 호스팅 환경을 알려줍니다.
+  // claude.ai 공유 링크(Artifact)에서는 window.print()가 동작하지 않지만,
+  // GitHub Pages 등 일반 호스팅이나 단독 실행 시에는 정상 동작합니다.
+  const hostMode = new URLSearchParams(location.search).get('host');
+  const inArtifact = hostMode === 'artifact';
+  const pc = document.getElementById('printCompare');
+  const pf = document.getElementById('printFull');
+  if (inArtifact) {
+    // 공유 링크(런처) 안에서는 브라우저 인쇄 대화상자가 뜨지 않으므로
+    // 인쇄 버튼 대신 Word 다운로드 사용을 안내합니다.
+    [pc, pf].forEach(btn=>{
+      btn.textContent = 'PDF로 저장은 Word 다운로드 후 이용해주세요';
+      btn.disabled = true;
+      btn.title = '공유 링크(런처) 화면에서는 인쇄 미리보기를 열 수 없습니다. 위의 "Word로 다운로드" 버튼으로 받은 뒤, 내려받은 프로그램에서 인쇄하거나 워드에서 PDF로 저장해주세요.';
+      btn.style.opacity = '0.6';
+      btn.style.cursor = 'not-allowed';
+    });
+  } else {
+    pc.addEventListener('click', ()=> window.print());
+    pf.addEventListener('click', ()=> window.print());
+  }
+})();
+
+/* ============================================================
+   규정정보 저장
+============================================================ */
+['infoName','infoNumber','infoBackground','infoContent'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', e=>{
+    const key = id.replace('info','').replace(/^./,c=>c.toLowerCase());
+    regInfo[key] = e.target.value;
+  });
+});
+</script>
+</body>
+</html>
